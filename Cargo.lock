@@ -953,6 +953,7 @@ dependencies = [
  "aarch64-cpu",
  "axalloc",
  "axhal",
+ "bit_field",
  "driver_common",
  "log",
  "page_table",
