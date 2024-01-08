@@ -5,8 +5,8 @@
 
 use core::{alloc::Layout, num::NonZeroUsize};
 
-use abstracted_data_struct::CommandRing;
-use axhal::mem::phys_to_virt;
+use axhal::mem::{phys_to_virt, PhysAddr};
+use command_ring_stuff::command_ring;
 #[doc(no_inline)]
 pub use driver_common::{BaseDriverOps, DeviceType};
 use log::info;
@@ -28,8 +28,10 @@ pub const VL805_VENDOR_ID: u16 = 0x1106;
 pub const VL805_DEVICE_ID: u16 = 0x3483;
 pub const VL805_MMIO_BASE: usize = 0x6_0000_0000;
 
-pub mod abstracted_data_struct;
-use crate::abstracted_data_struct::CommandType;
+pub mod command_ring_stuff;
+use command_ring_stuff::command_type::CommandType;
+
+use crate::command_ring_stuff::command_ring::CommandRing;
 pub mod register_operations_init_xhci;
 
 /// The information of the graphics device.
@@ -41,7 +43,7 @@ struct MemoryMapper;
 
 impl Mapper for MemoryMapper {
     unsafe fn map(&mut self, phys_base: usize, bytes: usize) -> NonZeroUsize {
-        info!("mapping:{:x}", phys_base);
+        // info!("mapping:{:x}", phys_base);
         return NonZeroUsize::new_unchecked(phys_to_virt(phys_base.into()).as_usize());
     }
 
@@ -165,6 +167,7 @@ impl XhciController {
         let mut operational = &mut registers.operational;
 
         // 获取中断管理寄存器和中断调节寄存器
+        info!("enable interrupting1");
         let iman = &mut registers.interrupter_register_set.interrupter_mut(0).iman;
         let imod = &mut registers.interrupter_register_set.interrupter_mut(0).imod;
 
@@ -172,6 +175,7 @@ impl XhciController {
         iman.update_volatile(|i| {
             i.set_interrupt_enable();
         });
+        info!("enable interrupting2");
         imod.update_volatile(|r| {
             r.set_interrupt_moderation_interval(4000);
             r.set_interrupt_moderation_counter(0);
@@ -180,6 +184,7 @@ impl XhciController {
         //启用扩展功能
         let ext = self.extended_cap.as_mut().unwrap();
         let iter_mut = ext.into_iter();
+        info!("enable interrupting3");
         for c in iter_mut.filter_map(Result::ok) {
             if let ExtendedCapability::UsbLegacySupport(mut u) = c {
                 let l = &mut u.usblegsup;
@@ -193,30 +198,42 @@ impl XhciController {
             }
         }
 
+        info!("enable interrupting4");
         let mut command_ring = CommandRing::new(
-            registers
-                .interrupter_register_set
-                .interrupter(0)
-                .erstba
-                .read_volatile()
-                .get() as *mut u64,
+            phys_to_virt(PhysAddr::from(
+                registers
+                    .interrupter_register_set
+                    .interrupter(0)
+                    .erstba
+                    .read_volatile()
+                    .get() as usize,
+            ))
+            .as_usize() as *mut u64,
         );
+
+        info!("enable interrupting5");
         operational
             .crcr
             .update_volatile(|r| r.set_command_ring_pointer(command_ring.address() as u64));
 
         xhci::ring::trb::event::TransferEvent::new();
         // 创建一个使能中断的命令TRB
+        info!("enable interrupting6");
         let enable_interrupt_trb = command_ring.create_command_trb(|t| {
+            info!("creating! 1");
             // 设置命令类型为使能中断
             t.set_type(CommandType::EnableInterrupt);
+            info!("creating! 2");
             // 设置中断目标为0
             t.set_interrupt_target(0);
+            info!("creating! 3");
             // 设置循环位为1
             t.set_cycle_bit(1);
+            info!("creating! done");
         });
 
         // 将命令TRB加入命令环
+        info!("enable interrupting7");
         command_ring.push_command_trb(enable_interrupt_trb);
 
         // .interrupter_register_set
