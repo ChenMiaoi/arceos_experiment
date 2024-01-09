@@ -1,7 +1,7 @@
 use alloc::{boxed::Box, vec};
 use axhal::mem::PhysAddr;
 use bit_field::BitField;
-use log::warn;
+use log::{info, warn};
 use xhci::{
     ring::trb::{self, event::Allowed},
     Registers,
@@ -25,6 +25,7 @@ pub(crate) struct EventRing {
 }
 impl EventRing {
     pub fn new(r: &mut Registers<MemoryMapper>) -> Self {
+        info!("new");
         let erst_num = r
             .capability
             .hcsparams2
@@ -41,6 +42,7 @@ impl EventRing {
     }
 
     pub fn cycle(&mut self) -> Option<Allowed> {
+        info!("cycle");
         let next = self.rings[self.index][self.counter];
         let sign = bool::from(next[3].get_bit(0));
         match sign == self.flipsign {
@@ -68,6 +70,7 @@ impl EventRing {
     }
 
     pub fn update_deq_with_xhci(&self, r: &mut Registers<MemoryMapper>) {
+        info!("update_deq_with_xhci");
         r.interrupter_register_set
             .interrupter_mut(0)
             .erdp
@@ -79,18 +82,22 @@ impl EventRing {
     }
 
     pub fn rings_addr(&self) -> vec::Vec<usize> {
+        info!("rings_addr");
         self.rings.iter().map(|v| v.as_ptr().addr()).collect() //TODO: WHOULD Vec convert into primvative array?
     }
 
     pub fn segment_table_addr(&self) -> PhysAddr {
+        info!("segment_table_addr");
         self.seg_table.as_ptr().addr().into()
     }
 
     pub fn num_of_erst(&self) -> usize {
+        info!("num_of_erst");
         self.erst_num
     }
 
     pub(crate) fn init_segtable(&mut self, r: &mut Registers<MemoryMapper>) {
+        info!("init_segtable");
         let head_addrs = self.rings_addr();
         for (ent, add) in self.seg_table.iter_mut().zip(head_addrs) {
             ent.set(add.into(), MAX_NUM_OF_TRB_IN_QUEUE as u16);

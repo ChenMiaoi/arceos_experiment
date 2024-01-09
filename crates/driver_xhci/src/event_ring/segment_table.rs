@@ -6,10 +6,12 @@ use core::array;
 use alloc::vec;
 use alloc::{boxed::Box, vec::Vec};
 use axhal::mem::PhysAddr;
+use log::info;
 
 pub type SegmentTable = Vec<Entry>;
 
 pub fn new(len: usize) -> Box<SegmentTable> {
+    info!("new");
     Box::new(vec![Entry::null(); len])
 }
 
@@ -23,11 +25,13 @@ pub struct Entry {
 impl Entry {
     // Although the size of segment_size is u64, bits 16:63 are reserved.
     pub fn set(&mut self, addr: PhysAddr, size: u16) {
+        info!("set");
         self.base_address = addr.as_usize() as u64;
         self.segment_size = size.into();
     }
 
     fn null() -> Self {
+        info!("null");
         Self {
             base_address: 0,
             segment_size: 0,

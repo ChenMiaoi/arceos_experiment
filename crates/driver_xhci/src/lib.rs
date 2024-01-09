@@ -43,11 +43,14 @@ struct MemoryMapper;
 
 impl Mapper for MemoryMapper {
     unsafe fn map(&mut self, phys_base: usize, bytes: usize) -> NonZeroUsize {
+        info!("map");
         // info!("mapping:{:x}", phys_base);
         return NonZeroUsize::new_unchecked(phys_to_virt(phys_base.into()).as_usize());
     }
 
-    fn unmap(&mut self, virt_base: usize, bytes: usize) {}
+    fn unmap(&mut self, virt_base: usize, bytes: usize) {
+        info!("unmap");
+    }
 }
 
 impl XhciController {
@@ -89,6 +92,7 @@ impl XhciController {
 
     // 初始化控制器
     fn startup_xhci(&mut self) {
+        info!("startup_xhci");
         let r = self.controller.as_mut().unwrap();
         let mut operational = &mut r.operational;
 
@@ -96,14 +100,17 @@ impl XhciController {
             r.clear_run_stop();
         });
 
+        info!("waiting halt");
         while !operational.usbsts.read_volatile().hc_halted() {}
 
-        operational.usbcmd.update_volatile(|u| {
-            u.set_host_controller_reset();
-        });
+        // operational.usbcmd.update_volatile(|u| {
+        // u.set_host_controller_reset();
+        // });
 
-        while operational.usbcmd.read_volatile().host_controller_reset() {}
-        while operational.usbsts.read_volatile().controller_not_ready() {}
+        // info!("waiting reset");
+        // while operational.usbcmd.read_volatile().host_controller_reset() {}
+        // info!("waiting not ready");
+        // while operational.usbsts.read_volatile().controller_not_ready() {}
 
         operational.config.update_volatile(|c| {
             c.set_max_device_slots_enabled(
@@ -118,6 +125,7 @@ impl XhciController {
     }
 
     fn configure_event_ring(&mut self) {
+        info!("configure_event_ring");
         self.event_ring = Some(EventRing::new(self.controller.as_mut().unwrap()));
         let mut event_ring = self.event_ring.as_mut().unwrap();
 
@@ -133,17 +141,20 @@ pub trait XhciDriverOps: BaseDriverOps {
 
 impl BaseDriverOps for XhciController {
     fn device_name(&self) -> &str {
+        info!("device_name");
         //todo  unimplemented!();
         "xhci-controller"
     }
 
     fn device_type(&self) -> DeviceType {
+        info!("device_type");
         DeviceType::XHCI
     }
 }
 
 impl XhciDriverOps for XhciController {
     fn info(&self) -> XhciInfo {
+        info!("info");
         todo!()
     }
 }

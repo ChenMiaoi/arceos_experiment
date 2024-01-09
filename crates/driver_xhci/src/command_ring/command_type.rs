@@ -32,6 +32,7 @@ pub enum CommandType {
 impl CommandType {
     // 将命令类型转换为u32
     pub fn to_u32(&self) -> u32 {
+        info!("to_u32");
         // 将命令类型转换为u8
         let value = (*self) as u8;
         // 将命令类型左移10位，以对齐TRB的字段
@@ -56,32 +57,38 @@ pub struct CommandTrb {
 impl CommandTrb {
     // 设置参数1
     pub fn set_parameter1(&mut self, value: u32) {
+        info!("set_parameter1");
         self.parameter1 = value;
     }
 
     // 设置参数2
     pub fn set_parameter2(&mut self, value: u32) {
+        info!("set_parameter2");
         self.parameter2 = value;
     }
 
     // 设置状态和控制
     pub fn set_status_and_control(&mut self, value: u32) {
+        info!("set_status_and_control");
         self.status_and_control = value;
     }
 
     // 设置命令类型
     pub fn set_type(&mut self, value: CommandType) {
+        info!("set_type");
         info!("set_type:{:x}", value.to_u32());
         self.command_type = value.to_u32();
     }
 
     // 设置中断目标
     pub fn set_interrupt_target(&mut self, value: u8) {
+        info!("set_interrupt_target");
         self.status_and_control |= (value as u32) << 22;
     }
 
     // 设置循环位
     pub fn set_cycle_bit(&mut self, value: u32) {
+        info!("set_cycle_bit");
         self.status_and_control |= value & 1;
     }
 }

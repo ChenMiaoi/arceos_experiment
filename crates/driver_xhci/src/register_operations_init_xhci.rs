@@ -29,6 +29,7 @@ const XHCI_PCI_CLASS_CODE: usize = 0xC0330;
 const XHCI_PCIE_SLOT: usize = 0;
 const XHCI_PCIE_FUNC: usize = 0;
 fn delay(seconds: u64) {
+    info!("delay");
     for i in 1..seconds + 1 {
         fn fibonacci_recursive(n: u64) -> u64 {
             if n == 0 {
@@ -46,6 +47,7 @@ fn delay(seconds: u64) {
 ///return:mmio space
 
 pub fn enable_xhci(bus: u8, dfn: u8, address: usize) -> usize {
+    info!("enable_xhci");
     info!("xhci energizing!{:x}", address);
     enable_bridge(bus, dfn, address);
 
@@ -67,6 +69,7 @@ pub fn enable_xhci(bus: u8, dfn: u8, address: usize) -> usize {
 }
 
 fn enable_device(address: usize) {
+    info!("enable_device");
     info!("enable xhci!");
     const SLOT: usize = XHCI_PCIE_SLOT;
     const FUNC: usize = XHCI_PCIE_FUNC;
@@ -105,6 +108,7 @@ fn enable_device(address: usize) {
 const PCI_HEADER_TYPE_BRIDGE: usize = 1;
 
 fn enable_bridge(bus: u8, dfn: u8, address: usize) {
+    info!("enable_bridge");
     info!("enable bridge!");
     //todo try to get pcie config address
     let conf: u64 = pcie_map_conf(bus, dfn, 0, address);
@@ -153,6 +157,7 @@ fn enable_bridge(bus: u8, dfn: u8, address: usize) {
 }
 
 fn pcie_map_conf(busnr: u8, devfn: u8, whereis: usize, address: usize) -> u64 {
+    info!("pcie_map_conf");
     /* Accesses to the RC go right to the RC registers if slot==0 */
     if busnr == 0 {
         info!("devfn:{:x}", devfn);
@@ -176,6 +181,7 @@ fn pcie_map_conf(busnr: u8, devfn: u8, whereis: usize, address: usize) -> u64 {
 
 #[allow(arithmetic_overflow)]
 fn cfg_index(busnr: u8, devfn: u8, reg: u8) -> i32 {
+    info!("cfg_index");
     // return ((((devfn) >> 3) & 0x1f) << 15) | ((devfn & 0x07) << 12) | (busnr << 20) | (reg & !3);
     return (((((devfn) >> 3) & 0x1f & 0x1f) << 15)
         | ((devfn & 0x07 & 0x07) << 12)
@@ -184,7 +190,9 @@ fn cfg_index(busnr: u8, devfn: u8, reg: u8) -> i32 {
         .into();
 }
 
-fn notify_reset() {}
+fn notify_reset() {
+    info!("notify_reset");
+}
 
 const TAG_XHCI_NOTIFY_RESET: usize = 0x00030058;
 const MEM_COHERENT_REGION: usize = 0x8000
@@ -203,6 +211,7 @@ const MEM_COHERENT_REGION: usize = 0x8000
 
 #[allow(arithmetic_overflow)]
 fn get_tag() -> bool {
+    info!("get_tag");
     info!("get_tag");
     let mut property_tag = PropertyTag {
         n_tag_id: RESET_COMMAND,
@@ -235,6 +244,7 @@ struct PropertyTag {
 
 impl Display for PropertyTag {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        info!("fmt");
         write!(
             f,
             "[tag_id:{},buf_size:{},val_len:{}]",
@@ -244,6 +254,7 @@ impl Display for PropertyTag {
 }
 
 fn get_tags(prop_tag: &mut PropertyTag) -> bool {
+    info!("get_tags");
     info!("get_tags,tag:{}", prop_tag);
     let buffer_size: usize = 72 + 128 + 32;
     let p_buffer_address = phys_to_virt(MEM_COHERENT_REGION.into()).as_usize();
@@ -308,6 +319,7 @@ const MAILBOX1_STATUS: usize = 0xFE000000 + 0xB880 + 0x38;
 const MAILBOX1_WRITE: usize = 0xFE000000 + 0xB880 + 0x20;
 
 fn write_read(n_data: usize) -> u32 {
+    info!("write_read");
     // PeripheralEntry();
 
     // if (!m_bEarlyUse) {
