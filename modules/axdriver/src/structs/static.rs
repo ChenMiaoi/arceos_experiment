@@ -6,6 +6,11 @@ pub use crate::drivers::AxDisplayDevice;
 pub use crate::drivers::AxNetDevice;
 #[cfg(feature = "xhci")]
 pub use crate::drivers::AxXHciDevice;
+#[cfg(feature = "usb")]
+pub use crate::drivers::AxUSBDevice;
+
+
+
 
 impl super::AxDeviceEnum {
     /// Constructs a network device.
@@ -29,6 +34,10 @@ impl super::AxDeviceEnum {
     #[cfg(feature = "xhci")]
     pub const fn from_xhci(dev: AxXHciDevice) -> Self {
         Self::XHCI(dev)
+    }    
+    #[cfg(feature = "usb")]
+    pub const fn from_usb(dev: AxUSBDevice) -> Self {
+        Self::USB(dev)
     }
 }
 

@@ -29,6 +29,9 @@ pub enum DeviceType {
     Display,
     ///xhci device
     XHCI,
+
+    /// USB device
+    USB,
 }
 
 /// The error type for device operation failures.

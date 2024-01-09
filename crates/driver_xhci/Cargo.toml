@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 
 driver_common = { path = "../driver_common" }
-xhci = {path = "../xhci"}
+# xhci = {path = "../xhci"}
 axhal = {path = "../../modules/axhal"}
 axalloc = {path = "../../modules/axalloc"}
 page_table = {path = "../page_table"}

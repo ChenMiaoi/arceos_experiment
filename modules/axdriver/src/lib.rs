@@ -92,6 +92,10 @@ pub use self::structs::AxDisplayDevice;
 pub use self::structs::AxNetDevice;
 #[cfg(feature = "xhci")]
 pub use self::structs::AxXHciDevice;
+#[cfg(feature = "usb")]
+pub use self::structs::AxUSBDevice;
+
+
 
 /// A structure that contains all device drivers, organized by their category.
 #[derive(Default)]
@@ -107,6 +111,9 @@ pub struct AllDevices {
     pub display: AxDeviceContainer<AxDisplayDevice>,
     #[cfg(feature = "xhci")]
     pub xhci: AxDeviceContainer<AxXHciDevice>,
+
+    #[cfg(feature = "usb")]
+    pub usb: AxDeviceContainer<AxUSBDevice>,
 }
 
 impl AllDevices {
@@ -150,6 +157,8 @@ impl AllDevices {
             AxDeviceEnum::Display(dev) => self.display.push(dev),
             #[cfg(feature = "xhci")]
             AxDeviceEnum::XHCI(dev) => self.xhci.push(dev),
+            #[cfg(feature = "usb")]
+            AxDeviceEnum::USB(dev) => self.usb.push(dev),
         }
     }
 }
@@ -194,6 +203,13 @@ pub fn init_drivers() -> AllDevices {
             debug!("  xhci device {}: {:?}", i, dev.device_name());
         }
     }
-
+    #[cfg(feature = "usb")]
+    {
+        debug!("number of usb devices: {}", all_devs.usb.len());
+        for (i, dev) in all_devs.usb.iter().enumerate() {
+            assert_eq!(dev.device_type(), DeviceType::USB);
+            debug!("  usb device {}: {:?}", i, dev.device_name());
+        }
+    }
     all_devs
 }

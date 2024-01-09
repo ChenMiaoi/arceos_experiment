@@ -10,9 +10,7 @@ use axalloc::global_allocator;
 use axhal::mem::PhysAddr;
 use driver_common::DeviceType;
 use driver_pci::Command;
-use driver_xhci::{
-    register_operations_init_xhci, XhciController, XhciDriverOps, VL805_DEVICE_ID, VL805_VENDOR_ID,
-};
+
 use page_table_entry::GenericPTE;
 use page_table_entry::MappingFlags;
 
@@ -82,6 +80,9 @@ cfg_if::cfg_if! {
 //xhci__
 cfg_if::cfg_if! {
     if #[cfg(xhci_dev = "xhci")] {
+        use driver_xhci::{
+    register_operations_init_xhci, XhciController, XhciDriverOps, VL805_DEVICE_ID, VL805_VENDOR_ID,
+};
         pub struct XhciDriver;
         register_xhci_driver!(XhciDriver,driver_xhci::XhciController);
 
@@ -180,7 +181,24 @@ cfg_if::cfg_if! {
         }
     }
 }
+//vl805
+cfg_if::cfg_if! {
+    if #[cfg(usb_dev = "vl805")] {
+        pub struct VL805Driver;
+        register_usb_driver!(VL805Driver,driver_usb::xhci::vl805::VL805);
 
+        impl DriverProbe for VL805Driver {
+            fn probe_pci(
+                    root: &mut PciRoot,
+                    bdf: DeviceFunction,
+                    dev_info: &DeviceFunctionInfo,
+                ) -> Option<AxDeviceEnum> {
+                    driver_usb::xhci::vl805::VL805::probe_pci(dev_info.vendor_id, dev_info.device_id)
+                    .map(|e| AxDeviceEnum::from_usb(e))
+            }
+        }
+    }
+}
 cfg_if::cfg_if! {
     if #[cfg(block_dev = "bcm2835-sdhci")]{
         pub struct BcmSdhciDriver;

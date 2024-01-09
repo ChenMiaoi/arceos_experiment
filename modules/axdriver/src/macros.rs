@@ -33,6 +33,14 @@ macro_rules! register_xhci_driver {
         pub type AxXHciDevice = $device_type;
     };
 }
+macro_rules! register_usb_driver {
+    ($driver_type:ty, $device_type:ty) => {
+        /// The unified type of the NIC devices.
+        #[cfg(not(feature = "dyn"))]
+        pub type AxUSBDevice = $device_type;
+    };
+}
+
 
 macro_rules! for_each_drivers {
     (type $drv_type:ident, $code:block) => {{
@@ -75,6 +83,11 @@ macro_rules! for_each_drivers {
         #[cfg(xhci_dev = "xhci")]
         {
             type $drv_type = crate::drivers::XhciDriver;
+            $code
+        } 
+        #[cfg(usb_dev = "vl805")]
+        {
+            type $drv_type = crate::drivers::VL805Driver;
             $code
         }
     }};

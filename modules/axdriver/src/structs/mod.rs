@@ -21,6 +21,9 @@ pub enum AxDeviceEnum {
     /// Graphic xhci device.
     #[cfg(feature = "xhci")]
     XHCI(AxXHciDevice),
+
+    #[cfg(feature = "usb")]
+    USB(AxUSBDevice),
 }
 
 impl BaseDriverOps for AxDeviceEnum {
@@ -36,6 +39,8 @@ impl BaseDriverOps for AxDeviceEnum {
             Self::Display(_) => DeviceType::Display,
             #[cfg(feature = "xhci")]
             Self::XHCI(_) => DeviceType::XHCI,
+            #[cfg(feature = "usb")]
+            Self::USB(_) => DeviceType::USB,
             _ => unreachable!(),
         }
     }
@@ -51,7 +56,9 @@ impl BaseDriverOps for AxDeviceEnum {
             #[cfg(feature = "display")]
             Self::Display(dev) => dev.device_name(),
             #[cfg(feature = "xhci")]
-            Self::XHCI(dev) => dev.device_name(),
+            Self::XHCI(dev) => dev.device_name(),            
+            #[cfg(feature = "usb")]
+            Self::USB(dev) => dev.device_name(),
             _ => unreachable!(),
         }
     }

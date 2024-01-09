@@ -1,0 +1,17 @@
+[package]
+name = "axusb"
+version = "0.1.0"
+edition = "2021"
+authors = ["Rui Zhou <zrufo747@outlook.com>"]
+description = "ArceOS usb module"
+license = "GPL-3.0-or-later OR Apache-2.0"
+homepage = "https://github.com/rcore-os/arceos"
+repository = "https://github.com/rcore-os/arceos/tree/main/modules/axusb"
+documentation = "https://rcore-os.github.io/arceos/axusb/index.html"
+
+[dependencies]
+log = "0.4"
+axdriver = { path = "../axdriver", features = ["usb"] }
+lazy_init = { path = "../../crates/lazy_init" }
+axsync = { path = "../axsync" }
+driver_usb = { path = "../../crates/driver_usb" }
