@@ -2,13 +2,16 @@
 
 #![no_std]
 #![feature(strict_provenance)]
+#![allow(unused)]
 pub mod command_ring;
 pub mod event_ring;
 pub mod register_operations_init_xhci;
 
-use core::{alloc::Layout, num::NonZeroUsize};
+extern crate alloc;
 
-use axhal::mem::{phys_to_virt, PhysAddr};
+use core::num::NonZeroUsize;
+
+use axhal::mem::phys_to_virt;
 use command_ring::CommandRing;
 #[doc(no_inline)]
 pub use driver_common::{BaseDriverOps, DeviceType};
@@ -17,8 +20,7 @@ use log::info;
 use xhci::{
     accessor::Mapper,
     extended_capabilities::{self},
-    ring::trb::event,
-    ExtendedCapability, Registers,
+    Registers,
 };
 
 pub const VL805_VENDOR_ID: u16 = 0x1106;
@@ -30,8 +32,8 @@ pub struct XhciController {
     mapper: Option<MemoryMapper>,
     controller: Option<Registers<MemoryMapper>>,
     extended_cap: Option<extended_capabilities::List<MemoryMapper>>,
-    event_ring: EventRing,
-    command_ring: CommandRing,
+    event_ring: Option<EventRing>,
+    command_ring: Option<CommandRing>,
 }
 /// The information of the graphics device.
 #[derive(Debug, Clone, Copy)]
@@ -74,8 +76,8 @@ impl XhciController {
             mapper: Some(memory_mapper),
             controller: Some(register),
             extended_cap,
-            event_ring: (),
-            command_ring: (),
+            event_ring: None,
+            command_ring: None,
         };
 
         xhci_controller.startup_xhci();
@@ -87,8 +89,8 @@ impl XhciController {
 
     // 初始化控制器
     fn startup_xhci(&mut self) {
-        let registers = self.controller.unwrap();
-        let mut operational = registers.operational;
+        let r = self.controller.as_mut().unwrap();
+        let mut operational = &mut r.operational;
 
         operational.usbcmd.update_volatile(|r| {
             r.clear_run_stop();
@@ -101,12 +103,11 @@ impl XhciController {
         });
 
         while operational.usbcmd.read_volatile().host_controller_reset() {}
-        while r.operational.usbsts.read_volatile().controller_not_ready() {}
+        while operational.usbsts.read_volatile().controller_not_ready() {}
 
         operational.config.update_volatile(|c| {
             c.set_max_device_slots_enabled(
-                registers
-                    .capability
+                r.capability
                     .hcsparams1
                     .read_volatile()
                     .number_of_device_slots(),
@@ -117,11 +118,11 @@ impl XhciController {
     }
 
     fn configure_event_ring(&mut self) {
-        self.event_ring = EventRing::new(self.controller.unwrap());
-        let mut event_ring = &mut self.event_ring;
+        self.event_ring = Some(EventRing::new(self.controller.as_mut().unwrap()));
+        let mut event_ring = self.event_ring.as_mut().unwrap();
 
-        event_ring.update_deq_with_xhci(self.controller);
-        event_ring.init_segtable(self.controller);
+        event_ring.update_deq_with_xhci(self.controller.as_mut().unwrap());
+        event_ring.init_segtable(self.controller.as_mut().unwrap());
     }
 }
 

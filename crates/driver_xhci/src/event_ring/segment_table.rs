@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //copy from ramen, should rewrite soon
 
-use axhal::mem::{PhysAddr, VirtAddr};
+use core::array;
 
-pub type SegmentTable = [Entry];
+use alloc::vec;
+use alloc::{boxed::Box, vec::Vec};
+use axhal::mem::PhysAddr;
 
-pub fn new(len: usize) -> SegmentTable {
-    [Entry; len]
+pub type SegmentTable = Vec<Entry>;
+
+pub fn new(len: usize) -> Box<SegmentTable> {
+    Box::new(vec![Entry::null(); len])
 }
 
 //TODO rewrite beacuse gpl3
@@ -19,7 +23,7 @@ pub struct Entry {
 impl Entry {
     // Although the size of segment_size is u64, bits 16:63 are reserved.
     pub fn set(&mut self, addr: PhysAddr, size: u16) {
-        self.base_address = addr.as_u64();
+        self.base_address = addr.as_usize() as u64;
         self.segment_size = size.into();
     }
 

@@ -1,15 +1,12 @@
-// 引入xhci库
-//TODO 迁移到xhci::ring::trb
-use xhci::Registers;
-
 pub mod command_type;
 
 use command_type::CommandTrb;
 
 // 定义CommandRing结构体
+
 pub struct CommandRing {
     // 命令环的指针
-    ring_ptr: *mut u64,
+    ring_ptr: u64,
     // 命令环的大小
     ring_size: usize,
     // 生产者循环索引
@@ -19,7 +16,7 @@ pub struct CommandRing {
 // 实现CommandRing结构体的方法
 impl CommandRing {
     // 创建一个新的命令环
-    pub fn new(ring_ptr: *mut u64) -> Self {
+    pub fn new(ring_ptr: u64) -> Self {
         // 为命令环分配内存
         let ring_ptr = ring_ptr;
         // 设置命令环的大小为16
@@ -46,7 +43,7 @@ impl CommandRing {
         F: FnOnce(&mut CommandTrb),
     {
         // 获取命令环的当前位置
-        let current_ptr = unsafe { self.ring_ptr.add(self.cycle_state as usize) };
+        let current_ptr = unsafe { (self.ring_ptr as *mut u64).add(self.cycle_state as usize) };
         // 获取命令TRB的引用
         let trb = unsafe { &mut *(current_ptr as *mut CommandTrb) };
         // 调用闭包来设置命令TRB的字段
