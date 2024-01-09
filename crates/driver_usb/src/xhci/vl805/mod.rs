@@ -22,7 +22,7 @@ impl  BaseDriverOps for VL805{
     }
 
     fn device_type(&self) -> DeviceType {
-        DeviceType::XHCI
+        DeviceType::USB
     }
 }
 

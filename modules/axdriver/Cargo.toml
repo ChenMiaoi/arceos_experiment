@@ -30,6 +30,7 @@ bcm2835-sdhci = ["block", "driver_block/bcm2835-sdhci"]
 ixgbe = ["net", "driver_net/ixgbe", "dep:axalloc", "dep:axhal"]
 xhci = ["driver_xhci","dep:axalloc","dep:axhal"]
 vl805 = ["usb", "bus-pci","driver_usb/vl805","dep:axalloc","dep:axhal" ]
+bcm2711 = ["driver_pci/bcm2711"]
 
 # more devices example: e1000 = ["net", "driver_net/e1000"]
 

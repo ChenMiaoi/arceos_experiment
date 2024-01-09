@@ -944,6 +944,7 @@ name = "driver_pci"
 version = "0.1.0"
 dependencies = [
  "axhal",
+ "brcm_pcie",
  "fdt",
  "lazy_init",
  "log",

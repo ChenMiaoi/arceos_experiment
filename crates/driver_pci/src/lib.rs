@@ -27,6 +27,16 @@ use virtio_drivers::transport::pci::{virtio_device_type, PciTransport};
 use virtio_drivers::transport::Transport;
 use virtio_drivers::{BufferDirection, Hal, PhysAddr, PAGE_SIZE};
 
+#[cfg(feature="bcm2711")]
+mod bcm2711;
+
+
+pub fn init(mmio_base: VirtAddr){
+
+    #[cfg(feature="bcm2711")]
+    bcm2711::init_pci(mmio_base);
+}
+
 pub fn op_spec_mmio_device<OpMMIODevice, OpPCIDevice, DeviceFilter>(
     fdt_file: usize,
     op_mmio_device: OpMMIODevice,

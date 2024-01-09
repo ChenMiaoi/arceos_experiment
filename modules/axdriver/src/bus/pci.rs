@@ -105,6 +105,8 @@ impl AllDevices {
         // let base_paddr: usize = 0xfd50_0000;
         // let base_vaddr = phys_to_virt(base_paddr.into());
         info!("base_vaddr:{:x}", base_vaddr.as_usize());
+
+        driver_pci::init(base_vaddr);
         let mut root = unsafe { PciRoot::new(base_vaddr.as_mut_ptr(), Cam::Ecam) };
 
         // PCI 32-bit MMIO space
