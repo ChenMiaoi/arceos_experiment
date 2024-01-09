@@ -1,6 +1,7 @@
 pub mod command_type;
 
 use command_type::CommandTrb;
+use log::info;
 
 // 定义CommandRing结构体
 
@@ -17,6 +18,7 @@ pub struct CommandRing {
 impl CommandRing {
     // 创建一个新的命令环
     pub fn new(ring_ptr: u64) -> Self {
+        info!("new");
         // 为命令环分配内存
         let ring_ptr = ring_ptr;
         // 设置命令环的大小为16
@@ -33,6 +35,7 @@ impl CommandRing {
 
     // 获取命令环的地址
     pub fn address(&self) -> usize {
+        info!("address");
         // 返回命令环的指针转换为usize
         self.ring_ptr as usize
     }
@@ -54,6 +57,7 @@ impl CommandRing {
 
     // 将一个命令TRB加入命令环
     pub fn push_command_trb(&mut self, trb_ptr: *mut u64) {
+        info!("push_command_trb");
         // 获取命令TRB的引用
         let trb = unsafe { &mut *(trb_ptr as *mut CommandTrb) };
         // 设置命令TRB的循环位为当前的循环状态
