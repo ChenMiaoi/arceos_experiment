@@ -167,6 +167,7 @@ name = "arceos-raspi4-usb"
 version = "0.1.0"
 dependencies = [
  "axdriver",
+ "axruntime",
  "axstd",
  "axusb",
 ]
@@ -498,6 +499,7 @@ dependencies = [
  "axlog",
  "axnet",
  "axtask",
+ "axusb",
  "crate_interface",
  "kernel_guard",
  "lazy_init",
