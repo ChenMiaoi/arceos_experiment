@@ -73,7 +73,7 @@ members = [
     "apps/task/yield",
     "apps/task/priority",
     "apps/task/tls",
-    # "apps/cli",
+    "apps/cli",
     "apps/boards/raspi4",
     "apps/boards/raspi4-usb",
 ]

@@ -11,16 +11,9 @@ authors = ["Yuekai Jia <equation618@gmail.com>"]
 default = []
 
 [dependencies]
-axfs_vfs = { path = "../../../crates/axfs_vfs", optional = true }
-axfs_ramfs = { path = "../../../crates/axfs_ramfs", optional = true }
-crate_interface = { path = "../../../crates/crate_interface", optional = true }
-axstd = { path = "../../../ulib/axstd", features = ["alloc", "fs"], optional = true }
+# axfs_vfs = { path = "../../../crates/axfs_vfs", optional = true }
+# axfs_ramfs = { path = "../../../crates/axfs_ramfs", optional = true }
+# crate_interface = { path = "../../../crates/crate_interface", optional = true }
+# axstd = { path = "../../../ulib/axstd", features = ["alloc", "fs"], optional = true }
 
-# axstd = { path = "../../ulib/axstd", optional = true }
-# arm_pl011 = { version = "0.1.0", path = "../../crates/arm_pl011" }
-# brcm_pcie = {path = "../../crates/brcm_pcie"}
-# axdriver ={ path = "../../modules/axdriver",features = ["xhci","bus-pci",]}
-# driver_xhci = {path = "../../crates/driver_xhci"}
-# axruntime = {path = "../../modules/axruntime", features = ["alloc","paging"]}
-# axalloc = {path = "../../modules/axalloc"}
-# axhal = {path = "../../modules/axhal"}
+axstd = { path = "../../ulib/axstd", optional = true }
