@@ -1,11 +1,10 @@
-#![cfg_attr(feature = "axstd", no_std)]
-#![cfg_attr(feature = "axstd", no_main)]
+#![no_std]
+#![no_main]
 
-#[cfg(feature = "axstd")]
 use axstd::println;
 
-#[cfg_attr(feature = "axstd", no_mangle)]
+#[no_mangle]
 fn main() {
-    println!("usb test!");
+    println!("usb test!!!");
 }
 

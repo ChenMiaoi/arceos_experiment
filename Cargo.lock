@@ -159,9 +159,9 @@ dependencies = [
 name = "arceos-raspi4-usb"
 version = "0.1.0"
 dependencies = [
+ "axfeat",
  "axstd",
  "axusb",
- "board_raspi4",
 ]
 
 [[package]]
@@ -344,6 +344,7 @@ dependencies = [
  "axruntime",
  "axsync",
  "axtask",
+ "axusb",
  "spinlock",
 ]
 
@@ -632,14 +633,6 @@ name = "bitmaps"
 version = "3.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "703642b98a00b3b90513279a8ede3fcfa479c126c5fb46e78f3051522f021403"
-
-[[package]]
-name = "board_raspi4"
-version = "0.1.0"
-dependencies = [
- "axdriver",
- "axruntime",
-]
 
 [[package]]
 name = "brcm_pcie"

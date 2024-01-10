@@ -75,7 +75,7 @@ macro_rules! for_each_drivers {
             $code
         }
 
-        #[cfg(usb_dev = "vl805")]
+        #[cfg(usb_host_dev = "vl805")]
         {
             type $drv_type = crate::drivers::VL805Driver;
             $code

@@ -38,6 +38,7 @@ pub trait DriverProbe {
         _bdf: DeviceFunction,
         _dev_info: &DeviceFunctionInfo,
     ) -> Option<AxDeviceEnum> {
+        warn!("PCI device not implemented");
         None
     }
 }

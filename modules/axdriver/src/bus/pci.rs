@@ -99,9 +99,7 @@ fn config_pci_device(
 impl AllDevices {
     pub(crate) fn probe_bus_devices(&mut self) {
         let base_vaddr = phys_to_virt(axconfig::PCI_ECAM_BASE.into());
-        // let base_paddr: usize = 0x6_0000_0000;
-        // let base_paddr: usize = 0xfd50_0000;
-        // let base_vaddr = phys_to_virt(base_paddr.into());
+
         info!("base_vaddr:{:x}", base_vaddr.as_usize());
 
         driver_pci::init(base_vaddr);
@@ -124,17 +122,10 @@ impl AllDevices {
                 } else {
                     debug!("PCI {}: {}", bdf, dev_info);
 
-                    // info!("in!");
                     if dev_info.header_type != HeaderType::Standard {
-                        // info!("continue enum");
                         continue;
                     }
 
-                    // if dev_info.class == 0 {
-                    //     info!("skipped unknown device");
-                    //     continue;
-                    // }
-                    // info!("{} == 0: {}", dev_info.class, dev_info.class == 0);
 
                     match config_pci_device(&mut root, bdf, &mut allocator) {
                         Ok(_) => for_each_drivers!(type Driver, {

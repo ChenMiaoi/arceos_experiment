@@ -38,7 +38,6 @@ impl VL805 {
             return None;
         } 
 
-        debug!("Probing VL805 4-Port USB 3.0 Host Controller");
 
             
 
