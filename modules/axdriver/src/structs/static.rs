@@ -4,10 +4,8 @@ pub use crate::drivers::AxBlockDevice;
 pub use crate::drivers::AxDisplayDevice;
 #[cfg(feature = "net")]
 pub use crate::drivers::AxNetDevice;
-#[cfg(feature = "xhci")]
-pub use crate::drivers::AxXHciDevice;
-#[cfg(feature = "usb")]
-pub use crate::drivers::AxUSBDevice;
+#[cfg(feature = "usb_host")]
+pub use crate::drivers::AxUSBHostDevice;
 
 
 
@@ -31,13 +29,10 @@ impl super::AxDeviceEnum {
         Self::Display(dev)
     }
 
-    #[cfg(feature = "xhci")]
-    pub const fn from_xhci(dev: AxXHciDevice) -> Self {
-        Self::XHCI(dev)
-    }    
-    #[cfg(feature = "usb")]
-    pub const fn from_usb(dev: AxUSBDevice) -> Self {
-        Self::USB(dev)
+
+    #[cfg(feature = "usb_host")]
+    pub const fn from_usb_host(dev: AxUSBHostDevice) -> Self {
+        Self::USBHost(dev)
     }
 }
 

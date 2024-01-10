@@ -1,7 +1,7 @@
 #[doc(no_inline)]
 pub use driver_common::{DeviceType, BaseDriverOps};
 use log::debug;
-pub use crate::USBDriverOps;
+pub use crate::host::USBHostDriverOps;
 
 
 
@@ -22,11 +22,11 @@ impl  BaseDriverOps for VL805{
     }
 
     fn device_type(&self) -> DeviceType {
-        DeviceType::USB
+        DeviceType::USBHost
     }
 }
 
-impl USBDriverOps for VL805 {
+impl USBHostDriverOps for VL805 {
    
 }
 

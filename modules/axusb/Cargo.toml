@@ -11,7 +11,7 @@ documentation = "https://rcore-os.github.io/arceos/axusb/index.html"
 
 [dependencies]
 log = "0.4"
-axdriver = { path = "../axdriver", features = ["usb"] }
+axdriver = { path = "../axdriver", features = ["usb_host"] }
 lazy_init = { path = "../../crates/lazy_init" }
 axsync = { path = "../axsync" }
 driver_usb = { path = "../../crates/driver_usb" }

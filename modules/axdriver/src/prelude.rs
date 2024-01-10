@@ -8,7 +8,5 @@ pub use {crate::structs::AxBlockDevice, driver_block::BlockDriverOps};
 pub use {crate::structs::AxDisplayDevice, driver_display::DisplayDriverOps};
 #[cfg(feature = "net")]
 pub use {crate::structs::AxNetDevice, driver_net::NetDriverOps};
-#[cfg(feature = "xhci")]
-pub use {crate::structs::AxXHciDevice, driver_xhci::XhciDriverOps};
-#[cfg(feature = "usb")]
-pub use {crate::structs::AxUSBDevice, driver_usb::USBDriverOps};
+#[cfg(feature = "usb_host")]
+pub use {crate::structs::AxUSBHostDevice, driver_usb::host::USBHostDriverOps};

@@ -16,7 +16,6 @@ members = [
     "crates/driver_block",
     "crates/driver_common",
     "crates/driver_display",
-    "crates/driver_xhci",
     "crates/driver_net",
     "crates/driver_pci",
     "crates/driver_virtio",
@@ -37,6 +36,7 @@ members = [
     "crates/timer_list",
     "crates/tuple_for_each",
     "crates/driver_usb",
+    "crates/board_raspi4",
 
     "modules/axalloc",
     "modules/axconfig",
@@ -73,7 +73,7 @@ members = [
     "apps/task/yield",
     "apps/task/priority",
     "apps/task/tls",
-    "apps/cli",
+    # "apps/cli",
     "apps/boards/raspi4",
     "apps/boards/raspi4-usb",
 ]

@@ -2,7 +2,7 @@ const NET_DEV_FEATURES: &[&str] = &["ixgbe", "virtio-net"];
 const BLOCK_DEV_FEATURES: &[&str] = &["ramdisk", "bcm2835-sdhci", "virtio-blk"];
 const DISPLAY_DEV_FEATURES: &[&str] = &["virtio-gpu"];
 const XHCI_DEV_FEATURES: &[&str] = &["xhci"];
-const USB_DEV_FEATURES: &[&str] = &["vl805"];
+const USB_HOST_DEV_FEATURES: &[&str] = &["vl805"];
 
 fn has_feature(feature: &str) -> bool {
     std::env::var(format!(
@@ -31,7 +31,7 @@ fn main() {
         ("block", BLOCK_DEV_FEATURES),
         ("display", DISPLAY_DEV_FEATURES),
         ("xhci", XHCI_DEV_FEATURES),
-        ("usb", USB_DEV_FEATURES),
+        ("usb_host", USB_HOST_DEV_FEATURES),
     ] {
         if !has_feature(dev_kind) {
             continue;

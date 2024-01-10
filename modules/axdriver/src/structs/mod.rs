@@ -18,12 +18,9 @@ pub enum AxDeviceEnum {
     /// Graphic display device.
     #[cfg(feature = "display")]
     Display(AxDisplayDevice),
-    /// Graphic xhci device.
-    #[cfg(feature = "xhci")]
-    XHCI(AxXHciDevice),
-
-    #[cfg(feature = "usb")]
-    USB(AxUSBDevice),
+    /// USB host controller.
+    #[cfg(feature = "usb_host")]
+    USBHost(AxUSBHostDevice),
 }
 
 impl BaseDriverOps for AxDeviceEnum {
@@ -37,10 +34,8 @@ impl BaseDriverOps for AxDeviceEnum {
             Self::Block(_) => DeviceType::Block,
             #[cfg(feature = "display")]
             Self::Display(_) => DeviceType::Display,
-            #[cfg(feature = "xhci")]
-            Self::XHCI(_) => DeviceType::XHCI,
-            #[cfg(feature = "usb")]
-            Self::USB(_) => DeviceType::USB,
+            #[cfg(feature = "usb_host")]
+            Self::USBHost(_) => DeviceType::USBHost,
             _ => unreachable!(),
         }
     }
@@ -55,10 +50,8 @@ impl BaseDriverOps for AxDeviceEnum {
             Self::Block(dev) => dev.device_name(),
             #[cfg(feature = "display")]
             Self::Display(dev) => dev.device_name(),
-            #[cfg(feature = "xhci")]
-            Self::XHCI(dev) => dev.device_name(),            
-            #[cfg(feature = "usb")]
-            Self::USB(dev) => dev.device_name(),
+            #[cfg(feature = "usb_host")]
+            Self::USBHost(dev) => dev.device_name(),
             _ => unreachable!(),
         }
     }

@@ -1,5 +1,3 @@
-use core::alloc::Layout;
-
 use crate::{prelude::*, AllDevices};
 use axhal::mem::phys_to_virt;
 use driver_pci::{

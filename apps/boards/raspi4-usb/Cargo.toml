@@ -8,8 +8,7 @@ authors = ["Rui Zhou <zrufo747@outlook.com>"]
 
 [dependencies]
 axstd = { path = "../../../ulib/axstd", optional = true }
-axdriver = { path= "../../../modules/axdriver", features = ["vl805", "bcm2711"]}
-axruntime = { path = "../../../modules/axruntime", features = ["usb"] }
+board_raspi4 = {path = "../../../crates/board_raspi4", features = ["usb-host"]}
 axusb = { path = "../../../modules/axusb"}
 
 

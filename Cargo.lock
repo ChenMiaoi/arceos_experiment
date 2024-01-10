@@ -75,20 +75,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "arceos-cli"
-version = "0.1.0"
-dependencies = [
- "arm_pl011",
- "axalloc",
- "axdriver",
- "axhal",
- "axruntime",
- "axstd",
- "brcm_pcie",
- "driver_xhci",
-]
-
-[[package]]
 name = "arceos-display"
 version = "0.1.0"
 dependencies = [
@@ -166,10 +152,9 @@ dependencies = [
 name = "arceos-raspi4-usb"
 version = "0.1.0"
 dependencies = [
- "axdriver",
- "axruntime",
  "axstd",
  "axusb",
+ "board_raspi4",
 ]
 
 [[package]]
@@ -326,7 +311,6 @@ dependencies = [
  "driver_pci",
  "driver_usb",
  "driver_virtio",
- "driver_xhci",
  "log",
  "page_table",
  "page_table_entry",
@@ -641,6 +625,14 @@ name = "bitmaps"
 version = "3.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "703642b98a00b3b90513279a8ede3fcfa479c126c5fb46e78f3051522f021403"
+
+[[package]]
+name = "board_raspi4"
+version = "0.1.0"
+dependencies = [
+ "axdriver",
+ "axruntime",
+]
 
 [[package]]
 name = "brcm_pcie"
@@ -974,21 +966,6 @@ dependencies = [
  "driver_display",
  "driver_net",
  "virtio-drivers",
-]
-
-[[package]]
-name = "driver_xhci"
-version = "0.1.0"
-dependencies = [
- "aarch64-cpu",
- "axalloc",
- "axhal",
- "bit_field",
- "driver_common",
- "log",
- "page_table",
- "page_table_entry",
- "spinlock",
 ]
 
 [[package]]

@@ -26,18 +26,12 @@ macro_rules! register_display_driver {
     };
 }
 
-macro_rules! register_xhci_driver {
+
+macro_rules! register_usb_host_driver {
     ($driver_type:ty, $device_type:ty) => {
         /// The unified type of the NIC devices.
         #[cfg(not(feature = "dyn"))]
-        pub type AxXHciDevice = $device_type;
-    };
-}
-macro_rules! register_usb_driver {
-    ($driver_type:ty, $device_type:ty) => {
-        /// The unified type of the NIC devices.
-        #[cfg(not(feature = "dyn"))]
-        pub type AxUSBDevice = $device_type;
+        pub type AxUSBHostDevice = $device_type;
     };
 }
 
@@ -80,11 +74,7 @@ macro_rules! for_each_drivers {
             type $drv_type = crate::drivers::IxgbeDriver;
             $code
         }
-        #[cfg(xhci_dev = "xhci")]
-        {
-            type $drv_type = crate::drivers::XhciDriver;
-            $code
-        } 
+
         #[cfg(usb_dev = "vl805")]
         {
             type $drv_type = crate::drivers::VL805Driver;
