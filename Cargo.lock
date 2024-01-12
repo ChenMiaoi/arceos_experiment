@@ -947,13 +947,17 @@ dependencies = [
 name = "driver_usb"
 version = "0.1.0"
 dependencies = [
+ "aarch64-cpu",
  "axalloc",
  "axhal",
  "driver_common",
+ "driver_pci",
  "log",
  "page_table",
  "page_table_entry",
+ "pci_types",
  "spinlock",
+ "tock-registers 0.9.0",
  "xhci",
 ]
 
@@ -1389,6 +1393,16 @@ name = "paste"
 version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "de3145af08024dea9fa9914f381a17b8fc6034dfb00f3a84013f7ff43f29ed4c"
+
+[[package]]
+name = "pci_types"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "831e5bebf010674bc2e8070b892948120d4c453c71f37387e1ffea5636620dbe"
+dependencies = [
+ "bit_field",
+ "bitflags 2.4.1",
+]
 
 [[package]]
 name = "peeking_take_while"

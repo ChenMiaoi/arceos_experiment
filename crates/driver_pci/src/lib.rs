@@ -23,7 +23,7 @@ pub use virtio_drivers::transport::pci::bus::{BarInfo, Cam, HeaderType, MemoryBa
 pub use virtio_drivers::transport::pci::bus::{
     CapabilityInfo, Command, DeviceFunction, DeviceFunctionInfo, PciRoot, Status,
 };
-use virtio_drivers::transport::pci::{virtio_device_type, PciTransport};
+use virtio_drivers::transport::pci::{virtio_device_type, PciTransport, self};
 use virtio_drivers::transport::Transport;
 use virtio_drivers::{BufferDirection, Hal, PhysAddr, PAGE_SIZE};
 
@@ -36,6 +36,25 @@ pub fn init(mmio_base: VirtAddr){
     #[cfg(feature="bcm2711")]
     bcm2711::init_pci(mmio_base);
 }
+
+pub fn get_pci_config_addr(pci_base: usize, device_function: DeviceFunction, cam: Cam)-> usize{
+        assert!(device_function.valid());
+
+        let bdf = (device_function.bus as u32) << 8
+            | (device_function.device as u32) << 3
+            | device_function.function as u32;
+        let address =
+            bdf << match cam {
+                Cam::MmioCam => 8,
+                Cam::Ecam => 12,
+            } ;
+        // Ensure that address is within range.
+        assert!(address < cam.size());
+        // Ensure that address is word-aligned.
+        assert!(address & 0x3 == 0);
+        pci_base + address as usize 
+}
+
 
 pub fn op_spec_mmio_device<OpMMIODevice, OpPCIDevice, DeviceFilter>(
     fdt_file: usize,

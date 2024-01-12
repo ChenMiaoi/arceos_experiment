@@ -77,7 +77,6 @@ fn config_pci_device(
 
                 bar += 1;
                 if info.takes_two_entries() {
-                    info!("two ents");
                     bar += 1;
                 }
             }
@@ -105,27 +104,31 @@ impl AllDevices {
         driver_pci::init(base_vaddr);
         let mut root = unsafe { PciRoot::new(base_vaddr.as_mut_ptr(), Cam::Ecam) };
 
+        // pci enable
+        let root_bdf = DeviceFunction{bus:0, device:0, function:0};
+        let (_status, cmd) = root.get_status_command(root_bdf);
+        root.set_command(root_bdf,
+        cmd|Command::IO_SPACE | Command::MEMORY_SPACE | Command::BUS_MASTER);
+
         // PCI 32-bit MMIO space
         let mut allocator = axconfig::PCI_RANGES
             .get(1)
             .map(|range| PciRangeAllocator::new(range.0 as u64, range.1 as u64));
-        // let allocator = axalloc::global_allocator();
-
-        // info!("pci_ranges = ({},{})", axconfig::PCI_RANGES.first());
 
         'out: for bus in 0..=axconfig::PCI_BUS_END as u8 {
-            // info!("iter {bus}");
-            for (bdf, dev_info) in root.enumerate_bus(bus) {
-                if !((dev_info.class == 0xc as u8) && (dev_info.subclass == 0x3 as u8)) {
-                    //hard code, need modify
-                    continue;
-                } else {
-                    debug!("PCI {}: {}", bdf, dev_info);
+            for (bdf, dev_info) in root.enumerate_bus(bus) {     
+         
+
+                debug!("PCI {}: {}", bdf, dev_info);
+                    if (dev_info.device_id==0 && dev_info.vendor_id==0){
+                        continue;
+                    }
 
                     if dev_info.header_type != HeaderType::Standard {
                         continue;
                     }
 
+                    debug!(" PCI config: {}", bdf);
 
                     match config_pci_device(&mut root, bdf, &mut allocator) {
                         Ok(_) => for_each_drivers!(type Driver, {
@@ -137,18 +140,15 @@ impl AllDevices {
                                     dev.device_name(),
                                 );
                                 self.add_device(dev);
-                                break 'out; // skip to the next device
+                                // continue;
+                                break 'out;
                             }
                         }),
                         Err(e) => warn!(
                             "failed to enable PCI device at {}({}): {:?}",
                             bdf, dev_info, e
                         ),
-                    } //todo fix memory alloc
-                      // info!("break!");
-                    break 'out;
-                }
-                // info!("iter complete")
+                    } 
             }
         }
     }
