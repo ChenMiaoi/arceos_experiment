@@ -20,6 +20,6 @@ Raspberry Pi Imager 烧录一个64位系统SD卡，删除所有内容。
 ```shell
 make PLATFORM=aarch64-raspi4 A=apps/boards/raspi4-usb LOG=debug chainboot
 ```
-
+开发板接好 usb转串口，插入usb，并上电。
 
 ![](./hello.png)
