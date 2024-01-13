@@ -1,6 +1,7 @@
 
 ### 编译生成并烧录
 
+Raspberry Pi Imager 烧录一个64位系统SD卡，删除所有内容。
 从Raspberry Pi firmware repo中将以下文件复制到SD卡上：
 
 [fixup4.dat](https://github.com/raspberrypi/firmware/raw/master/boot/fixup4.dat) <br>
