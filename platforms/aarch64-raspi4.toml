@@ -18,9 +18,9 @@ kernel-base-vaddr = "0xffff_0000_0008_0000"
 phys-virt-offset = "0xffff_0000_0000_0000"
 # MMIO regions with format (`base_paddr`, `size`).
 mmio-regions = [
-    ["0xFE20_1000", "0x1000"],      # PL011 UART
+    # ["0xFE20_1000", "0x1000"],      # PL011 UART
     ["0xFF84_1000", "0x8000"],      # GICv2
-    ["0xFE00_0000", "0xC000"],      # pcie mailbox
+    ["0xFE00_0000", "0xFF_F000"],      # pcie mailbox
     # ["0xFD50_0000", "0x9400"],      # pcie ecam
     # ["0xFD50_0000", "0xA000"],      # pcie ecam
     ["0xFD50_0000", "0x1A000"],      # pcie ecam

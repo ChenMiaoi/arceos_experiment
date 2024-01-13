@@ -7,11 +7,15 @@
 [start4.elf](https://github.com/raspberrypi/firmware/raw/master/boot/start4.elf) <br>
 [bcm2711-rpi-4-b.dtb](https://github.com/raspberrypi/firmware/raw/master/boot/bcm2711-rpi-4-b.dtb) <br>
 
+[config.txt](./config.txt)
 
 从 tools 文件夹复制 chainboot 固件到SD卡上：
 [kernel8.img](../../../tools/raspi4/common/image/chainboot/kernel8.img)
 
 
+
+
+项目根目录下执行：
 ```shell
 make PLATFORM=aarch64-raspi4 A=apps/boards/raspi4-usb LOG=debug chainboot
 ```

@@ -104,11 +104,13 @@ impl AllDevices {
         driver_pci::init(base_vaddr);
         let mut root = unsafe { PciRoot::new(base_vaddr.as_mut_ptr(), Cam::Ecam) };
 
-        // pci enable
+        // bridge enable
         let root_bdf = DeviceFunction{bus:0, device:0, function:0};
         let (_status, cmd) = root.get_status_command(root_bdf);
+        
         root.set_command(root_bdf,
-        cmd|Command::IO_SPACE | Command::MEMORY_SPACE | Command::BUS_MASTER);
+        cmd | Command::MEMORY_SPACE | Command::BUS_MASTER | Command::SERR_ENABLE | Command::PARITY_ERROR_RESPONSE);
+        
 
         // PCI 32-bit MMIO space
         let mut allocator = axconfig::PCI_RANGES

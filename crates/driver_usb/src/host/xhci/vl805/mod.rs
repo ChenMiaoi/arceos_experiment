@@ -102,6 +102,8 @@ impl VL805 {
         let header =
             pci_types::PciHeader::new(PciAddress::new(0, bdf.bus, bdf.device, bdf.function));
 
+        
+
         let ep = pci_types::EndpointHeader::from_header(header, &vl805);
         if let Some(ep) = ep {
             let ep_stat = ep.status(&vl805);
@@ -121,16 +123,25 @@ impl VL805 {
 
         let regs = unsafe { xhci::Registers::new(bar, mapper) };
         
+        
+
         let version = regs.capability.hciversion.read_volatile();
 
         debug!("xhci version: {:x}", version.get());
         let mut o = regs.operational;
 
-        debug!("xhci stat: {:?}", o.usbsts.read_volatile());
-        o.config.update_volatile(|cfg|{
-            cfg.set_configuration_information_enable();
+        let hcsp1 = regs.capability.hcsparams1.read_volatile();
+
+        debug!("xhci max slots: {}, max ports: {}", hcsp1.number_of_device_slots(), hcsp1.number_of_ports());
+
+        o.usbcmd.update_volatile(|r|{
+            r.set_run_stop();
         });
-        debug!("xhci config {:?}", o.config.read_volatile());
+
+
+
+
+        debug!("xhci stat: {:?}", o.usbsts.read_volatile());
 
         debug!("xhci wait for ready...");
         while o.usbsts.read_volatile().controller_not_ready() {}
@@ -156,9 +167,7 @@ impl VL805 {
         );
 
         let cs = &regs.pmcs;
-        cs.modify(PCI_PME_CS_REG::PMEE::SET);
-
-
+        // cs.matches_any(&[PCI_PME_CS_REG::PS::D0, PCI_PME_CS_REG::PMEE::SET]);
         debug!(
             "pme enable: {} ps: {:?} nsfrst: {}", 
             cs.read(PCI_PME_CS_REG::PMEE),

@@ -97,7 +97,12 @@ cfg_if::cfg_if! {
                         match bar_info{
                             driver_pci::BarInfo::Memory { address_type, prefetchable, address, size } => {
                                 let base_vaddr = phys_to_virt(axconfig::PCI_ECAM_BASE.into());
-                                root.set_command(bdf, Command::SERR_ENABLE|Command::IO_SPACE|Command::MEMORY_SPACE|Command::INTERRUPT_DISABLE);
+                                root.set_command(bdf, 
+                                    Command::SERR_ENABLE
+                                    | Command::MEMORY_SPACE
+                                    | Command::BUS_MASTER
+                                    | Command::PARITY_ERROR_RESPONSE
+                                );
                                 
 
                                 if let Some(d) = VL805::probe_pci(

@@ -153,7 +153,6 @@ fn enable_bridge(bus: u8, dfn: u8, address: usize) {
         // *((conf + BRCM_PCIE_CAP_REGS + PCI_EXP_RTCTL) as *mut u8) = PCI_EXP_RTCTL_CRSSVE;
 
         // *((conf + 0x04) as *mut u16) = 0x2 | 0x4 | 0x40 | 0x100;
-        // *((conf + 0x04) as *mut u16) = 0x2 | 0x4 | 0x40 | 0x100;
         info!("done");
     }
 }

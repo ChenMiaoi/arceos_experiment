@@ -1,6 +1,8 @@
 #[cfg(feature = "vl805")]
 pub mod vl805;
 pub mod regs;
+pub mod arm_mailbox;
+pub mod propertytags;
 use axhal::mem::{phys_to_virt, VirtAddr, PhysAddr};
 use log::info;
 use xhci::accessor::Mapper;
