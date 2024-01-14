@@ -195,3 +195,5 @@ fn write32(addr: usize, data: u32) -> () {
         (vaddr.as_mut_ptr() as *mut u32).write_volatile(data)
     }
 }
+
+

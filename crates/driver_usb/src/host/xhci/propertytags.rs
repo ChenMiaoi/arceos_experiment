@@ -1,4 +1,4 @@
-use core::{usize, mem::size_of, ptr::{slice_from_raw_parts_mut, slice_from_raw_parts}, alloc::Layout};
+use core::{usize, mem::size_of, ptr::{slice_from_raw_parts_mut, slice_from_raw_parts}, alloc::Layout, time::Duration};
 
 use axhal::mem::{PAGE_SIZE_4K, phys_to_virt, virt_to_phys};
 use log::debug;
@@ -7,7 +7,7 @@ use xhci::registers::runtime;
 use super::arm_mailbox::MailBox;
 
 pub const BCM_MAILBOX_PROP_OUT: u32 = 8;
-const GPU_MEM_BASE: usize = 0xC0000000;
+const GPU_MEM_BASE: usize = 0x40000000;
 const CORES: usize = axconfig::SMP;
 const MEM_KERNEL_START: usize = axconfig::KERNEL_BASE_PADDR;
 const MEGABYTE: usize = 0x100000;
@@ -27,7 +27,9 @@ fn get_coherent_page(n_slot: usize)->usize{
 }
 
 impl PropertyTags{
-    pub fn get(tag: &TProperyTag)->Self{        
+    pub fn get(
+        // tag: &TProperyTag
+    )->Self{        
         let mailbox = MailBox::new(BCM_MAILBOX_PROP_OUT);
         // let p_buffer_phy = get_coherent_page(0);
 
@@ -42,26 +44,45 @@ impl PropertyTags{
 
         debug!("p_buffer: @virt {:x}", p_buffer);
 
-        let header = unsafe{&mut*(p_buffer  as *const u8 as *mut TPropertyBuffer)};
+        let buffer = unsafe{&mut*(p_buffer  as *mut TPropertyBuffer)};
+
+        debug!("buffer: {:p}", buffer);
+
+        // unsafe{
+        //     let data_ptr = tag as *const TProperyTag as *const u8;
+        //     let tag_data = &*slice_from_raw_parts(data_ptr, size_of::<TProperyTag>());
+        //     let tag_len = tag_data.len();
+        //     header.n_code = PropertyCode::Request;
+        //     let header_len = size_of::<TPropertyBuffer>() ;
+        //     header.bffer_size = (header_len + tag_len + size_of::<u32>()) as u32;
+
+        //     let tag_ptr = (p_buffer + header_len)as  *mut u8;
+
+        //     let tag_dst = &mut *slice_from_raw_parts_mut(tag_ptr, tag_len);
+
+        //     tag_dst.copy_from_slice(tag_data);
+
+        //     let end = (p_buffer+ header_len + tag_len) as *mut u32;
+
+        //     *end = 0;
+        // }
 
         unsafe{
-            let data_ptr = tag as *const TProperyTag as *const u8;
-            let tag_data = &*slice_from_raw_parts(data_ptr, size_of::<TProperyTag>());
-            let tag_len = tag_data.len();
-            header.n_code = PropertyCode::Request;
-            let header_len = size_of::<TPropertyBuffer>() ;
-            header.bffer_size = (header_len + tag_len + size_of::<u32>()) as u32;
+            let buffer_size = size_of::<TPropertyBuffer>()+ size_of::<TProperyTag>();
+            let buffer_size_with_end = buffer_size + size_of::<u32>();
+            
+            debug!("buffer_size_with_end: {:x}", buffer_size_with_end);
 
-            let tag_ptr = (p_buffer + header_len)as  *mut u8;
-
-            let tag_dst = &mut *slice_from_raw_parts_mut(tag_ptr, tag_len);
-
-            tag_dst.copy_from_slice(tag_data);
-
-            let end = (p_buffer+ header_len + tag_len) as *mut u32;
-
-            *end = 0;
+            buffer.n_code = PropertyCode::Request;
+            buffer.bffer_size = buffer_size_with_end as u32;
+            buffer.tag.tag_id= PropTag::GetFirmwareRevision;
+            buffer.tag.value_bufsize=0;
+            buffer.tag.code_and_value_len=0;
+            *((p_buffer +  buffer_size) as *mut u32) = 0;
+            
         }
+
+        debug!("buffer {:?}", buffer);
 
         let send_addr = p_buffer;
         // let send_addr = virt_to_phys(p_buffer.into()).as_usize();
@@ -85,11 +106,10 @@ impl PropertyTags{
 
         debug!("wait for result...");
 
+        axhal::time::busy_wait(Duration::from_secs(1));
+        // while buffer.n_code == PropertyCode::Request {}
 
-
-        while header.n_code == PropertyCode::Request {}
-
-        debug!("tag result: {:?}", header.n_code);
+        debug!("tag result: {:?}", buffer);
 
         Self{}
     }
@@ -97,9 +117,10 @@ impl PropertyTags{
 
 
 #[repr(u32)]
+#[derive(Debug)]
 pub enum PropTag{
     NotifyXhciReset = 0x00030058,
-    // NotifyXhciReset = 0x1,
+    GetFirmwareRevision = 0x1,
 }
 #[repr(u32)]
 #[derive(Debug, PartialEq, Eq)]
@@ -109,33 +130,20 @@ pub enum PropertyCode{
     ResponseFailure = 0x80000001,
 }
 
+
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct TProperyTag{
+    tag_id: PropTag,
+    value_bufsize: u32,
+    code_and_value_len: u32,
+}
 #[repr(C)]
 #[derive(Debug)]
 struct TPropertyBuffer
 {
 	bffer_size: u32,			// bytes
 	n_code: PropertyCode,
-	// end tag follows
-}
-
-#[repr(C)]
-pub struct TProperyTag{
-    tag_id: PropTag,
-    value_bufsize: u32,
-    value_length: u32,
-    value: u32,
-}
-
-impl TProperyTag {
-    pub fn new(tag: PropTag, value: u32)->Self{
-        let value_bufsize = size_of::<TProperyTag>() as u32;
-        let value_length = size_of::<u32>() as u32 & (! (1<<31));
-
-        TProperyTag{
-            tag_id: tag,
-            value_bufsize,
-            value_length,
-            value,
-        }
-    }
+    tag: TProperyTag,
 }

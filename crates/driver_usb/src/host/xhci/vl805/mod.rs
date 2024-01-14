@@ -135,9 +135,10 @@ impl VL805 {
         debug!("xhci max slots: {}, max ports: {}", hcsp1.number_of_device_slots(), hcsp1.number_of_ports());
 
         const DEV_ADDR:u32 = 1<<20| 0<<15 | 0<<12;
-        let tag = TProperyTag::new(PropTag::NotifyXhciReset, DEV_ADDR);
-        PropertyTags::get(&tag);
+        // let tag = TProperyTag::new(PropTag::NotifyXhciReset, DEV_ADDR);
+        // PropertyTags::get(&tag);
 
+        PropertyTags::get();
 
         debug!("xhci stat: {:?}", o.usbsts.read_volatile());
 

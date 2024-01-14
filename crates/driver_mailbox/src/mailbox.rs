@@ -25,3 +25,8 @@ impl <T:MailBoxAccess> MailBox<T> {
         self.access.write(0);
     }
 }
+
+
+struct Buffer{
+    
+}

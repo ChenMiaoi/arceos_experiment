@@ -37,6 +37,7 @@ impl MailBox {
 
         loop {
             let r = read32(MAILBOX0_READ);
+            debug!( "mailbox read 0x{:X}", r);
             if (r & 0xf) == self.n_channel {
                 return r & !0xf;
             }
@@ -47,8 +48,9 @@ impl MailBox {
         while read32(MAILBOX1_STATUS) == MAILBOX_STATUS_FULL {
             //println!("Mailbox is full");
         }
-        debug!("mailbox write 0x{:X}", data);
-        write32(MAILBOX1_WRITE, data  | self.n_channel);
+        let w = data | self.n_channel;
+        debug!("mailbox write 0x{:X}", w);
+        write32(MAILBOX1_WRITE, w);
     }
 
     pub fn flush(&self){

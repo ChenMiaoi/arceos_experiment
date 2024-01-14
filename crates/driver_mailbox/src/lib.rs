@@ -16,13 +16,3 @@ pub mod bcm;
 use axhal::mem::phys_to_virt;
 
 
-pub(crate) fn read32(addr: usize) -> u32 {
-    let vaddr = phys_to_virt(addr.into());
-    unsafe { *(vaddr.as_ptr() as *const u32) }
-}
-pub(crate) fn write32(addr: usize, data: u32) -> () {
-    let vaddr = phys_to_virt(addr.into());
-    unsafe {
-        *(vaddr.as_mut_ptr() as *mut u32) = data;
-    }
-}
