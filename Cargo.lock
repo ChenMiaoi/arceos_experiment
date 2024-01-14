@@ -922,6 +922,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "driver_mailbox"
+version = "0.1.0"
+dependencies = [
+ "axhal",
+ "lazy_init",
+ "log",
+]
+
+[[package]]
 name = "driver_net"
 version = "0.1.0"
 dependencies = [
@@ -949,6 +958,7 @@ version = "0.1.0"
 dependencies = [
  "aarch64-cpu",
  "axalloc",
+ "axconfig",
  "axhal",
  "driver_common",
  "driver_pci",

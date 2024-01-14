@@ -36,6 +36,7 @@ members = [
     "crates/timer_list",
     "crates/tuple_for_each",
     "crates/driver_usb",
+    "crates/driver_mailbox",
 
     "modules/axalloc",
     "modules/axconfig",

@@ -1,7 +1,7 @@
 mod register_operations_init_xhci;
 mod regs;
 use super::MemoryMapper;
-use crate::host::xhci::vl805::{self, register_operations_init_xhci::enable_xhci};
+use crate::host::xhci::{vl805::{self, register_operations_init_xhci::enable_xhci}, propertytags::{PropTag, TProperyTag, PropertyTags}};
 pub use crate::host::USBHostDriverOps;
 use axhal::{
     cpu,
@@ -134,11 +134,9 @@ impl VL805 {
 
         debug!("xhci max slots: {}, max ports: {}", hcsp1.number_of_device_slots(), hcsp1.number_of_ports());
 
-        o.usbcmd.update_volatile(|r|{
-            r.set_run_stop();
-        });
-
-
+        const DEV_ADDR:u32 = 1<<20| 0<<15 | 0<<12;
+        let tag = TProperyTag::new(PropTag::NotifyXhciReset, DEV_ADDR);
+        PropertyTags::get(&tag);
 
 
         debug!("xhci stat: {:?}", o.usbsts.read_volatile());

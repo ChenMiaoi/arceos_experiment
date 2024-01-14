@@ -1,0 +1,20 @@
+[package]
+name = "driver_mailbox"
+version = "0.1.0"
+edition = "2021"
+authors = ["Rui Zhou <zrufo747@outlook.com>"]
+description = "Structures and functions for Soc mailbox"
+license = "GPL-3.0-or-later OR Apache-2.0"
+homepage = "https://github.com/rcore-os/arceos"
+repository = "https://github.com/rcore-os/arceos/tree/main/crates/driver_mailbox"
+documentation = "https://rcore-os.github.io/arceos/driver_mailbox/index.html"
+
+
+[features]
+
+
+
+[dependencies]
+log = "0.4"
+axhal ={ path = "../../modules/axhal"}
+lazy_init = {path = "../lazy_init"}

@@ -11,12 +11,15 @@ const MAILBOX1_STATUS: usize = MAIL_BOX_BASE + 0x38;
 
 use core::time::Duration;
 
+use aarch64_cpu::asm::ret;
 use axhal::{mem::phys_to_virt, time};
+use log::debug;
 use tock_registers::{
     interfaces::{ReadWriteable, Readable, Writeable},
     register_bitfields, register_structs,
     registers::{ReadOnly, ReadWrite, WriteOnly},
 };
+use xhci::extended_capabilities::debug;
 
 pub struct MailBox {
     n_channel: u32,
@@ -28,28 +31,34 @@ impl MailBox {
     }
 
     pub fn read(&self) -> u32 {
-        while read32(MAILBOX0_STATUS) & MAILBOX_STATUS_EMPTY > 0 {
+        while read32(MAILBOX0_STATUS) == MAILBOX_STATUS_EMPTY{
             //println!("Mailbox is empty");
         }
 
         loop {
             let r = read32(MAILBOX0_READ);
             if (r & 0xf) == self.n_channel {
-                return r & !0xF;
+                // return r >> 4;
+                return r & !0xf;
             }
         }
     }
 
     pub fn write(&self, data: u32) -> () {
-        while read32(MAILBOX1_STATUS) & MAILBOX_STATUS_FULL > 0 {
+        while read32(MAILBOX1_STATUS) == MAILBOX_STATUS_FULL {
             //println!("Mailbox is full");
         }
-
-        write32(MAILBOX1_WRITE, data | self.n_channel);
+        // let data = data << 4;
+        debug!("mailbox write {:x}", data);
+        write32(MAILBOX1_WRITE, data  | self.n_channel);
     }
 
     pub fn flush(&self){
-        while !(read32(MAILBOX0_STATUS) & MAILBOX_STATUS_EMPTY==0) {
+        loop{
+            let r = read32(MAILBOX0_STATUS);
+            if r == MAILBOX_STATUS_EMPTY {
+                return;
+            }
             read32(MAILBOX0_READ);
             time::busy_wait(Duration::from_millis(20));
         }
@@ -57,7 +66,9 @@ impl MailBox {
 
     pub fn write_read(&self, data: u32)->u32{
         self.flush();
+        debug!("flush ok");
         self.write(data);
+        debug!("write ok");
         self.read()
     }
 
