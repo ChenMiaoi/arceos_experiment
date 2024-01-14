@@ -38,7 +38,6 @@ impl MailBox {
         loop {
             let r = read32(MAILBOX0_READ);
             if (r & 0xf) == self.n_channel {
-                // return r >> 4;
                 return r & !0xf;
             }
         }
@@ -48,8 +47,7 @@ impl MailBox {
         while read32(MAILBOX1_STATUS) == MAILBOX_STATUS_FULL {
             //println!("Mailbox is full");
         }
-        // let data = data << 4;
-        debug!("mailbox write {:x}", data);
+        debug!("mailbox write 0x{:X}", data);
         write32(MAILBOX1_WRITE, data  | self.n_channel);
     }
 
@@ -68,6 +66,9 @@ impl MailBox {
         self.flush();
         debug!("flush ok");
         self.write(data);
+        while read32(MAILBOX1_STATUS) != MAILBOX_STATUS_EMPTY {
+            //println!("Mailbox is full");
+        }
         debug!("write ok");
         self.read()
     }
@@ -76,12 +77,17 @@ impl MailBox {
 }
 fn read32(addr: usize) -> u32 {
     let vaddr = phys_to_virt(addr.into());
-    unsafe { *(vaddr.as_ptr() as *const u32) }
+    unsafe { 
+        // *(vaddr.as_ptr() as *const u32)
+        (vaddr.as_mut_ptr() as *const u32).read_volatile()
+     }
 }
 fn write32(addr: usize, data: u32) -> () {
     let vaddr = phys_to_virt(addr.into());
     unsafe {
-        *(vaddr.as_mut_ptr() as *mut u32) = data;
+        // *(vaddr.as_mut_ptr() as *mut u32) = data;
+        (vaddr.as_mut_ptr() as *mut u32).write_volatile(data)
     }
 }
+
 

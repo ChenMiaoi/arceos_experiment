@@ -7,7 +7,7 @@ use xhci::registers::runtime;
 use super::arm_mailbox::MailBox;
 
 pub const BCM_MAILBOX_PROP_OUT: u32 = 8;
-const GPU_MEM_BASE: usize = 0x40000000;
+const GPU_MEM_BASE: usize = 0xC0000000;
 const CORES: usize = axconfig::SMP;
 const MEM_KERNEL_START: usize = axconfig::KERNEL_BASE_PADDR;
 const MEGABYTE: usize = 0x100000;
@@ -18,8 +18,8 @@ pub struct PropertyTags{
 }
 
 fn bus_address(addr: usize)-> usize{
-    addr | GPU_MEM_BASE
-    // (addr  & !0xc0000000) | GPU_MEM_BASE
+    // addr | GPU_MEM_BASE
+    (addr  & !GPU_MEM_BASE) | GPU_MEM_BASE
 }
 
 fn get_coherent_page(n_slot: usize)->usize{
@@ -29,16 +29,16 @@ fn get_coherent_page(n_slot: usize)->usize{
 impl PropertyTags{
     pub fn get(tag: &TProperyTag)->Self{        
         let mailbox = MailBox::new(BCM_MAILBOX_PROP_OUT);
-        let p_buffer_phy = get_coherent_page(0);
+        // let p_buffer_phy = get_coherent_page(0);
 
-        // let p_buffer = phys_to_virt(p_buffer_phy.into()).as_usize();
+        let p_buffer = phys_to_virt(0x100_000.into()).as_usize();
 
-        // let layout = Layout::from_size_align(8 * 256, 8).unwrap();
+        // let layout = Layout::from_size_align(16 * 12 + 1 << 16, 16).unwrap();
         // let vaddr = axalloc::global_allocator().alloc(layout).unwrap();
-        // let p_buffer = vaddr.as_ptr() as usize;
+        // let p_buffer = vaddr.as_ptr() as usize * 1 << 16;
 
-        let buffer = bus_address(p_buffer_phy);
-        let p_buffer = phys_to_virt(buffer.into()).as_usize();
+        // let buffer = bus_address(p_buffer_phy);
+        // let p_buffer = phys_to_virt(buffer.into()).as_usize();
 
         debug!("p_buffer: @virt {:x}", p_buffer);
 
@@ -67,7 +67,7 @@ impl PropertyTags{
         // let send_addr = virt_to_phys(p_buffer.into()).as_usize();
 
         // 发送
-        // let send_addr = bus_address(send_addr);
+        let send_addr = bus_address(send_addr);
         use aarch64_cpu::asm::barrier::{self, SY};
         
         barrier::dsb(SY);
@@ -76,18 +76,18 @@ impl PropertyTags{
 
         barrier::dmb(SY);
 
-        debug!("read: {:x}", result);
+
+
+        debug!("read: 0x{:X}", result);
         // if (send_addr != result as usize){
         //     panic!("send_addr: {:x}, result: {:x}", send_addr, result);
         // }
 
-        unsafe{
-            let r = phys_to_virt((result as usize ).into());
-            let buffer = &* (r.as_ptr() as *mut TPropertyBuffer);
+        debug!("wait for result...");
 
-        debug!("tag result: {:?}", buffer.n_code);
-        }
 
+
+        while header.n_code == PropertyCode::Request {}
 
         debug!("tag result: {:?}", header.n_code);
 
@@ -96,12 +96,13 @@ impl PropertyTags{
 }
 
 
-#[repr(C)]
+#[repr(u32)]
 pub enum PropTag{
     NotifyXhciReset = 0x00030058,
+    // NotifyXhciReset = 0x1,
 }
-#[repr(C)]
-#[derive(Debug)]
+#[repr(u32)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum PropertyCode{
     Request = 0x00000000,
     ResponseSuccess = 0x80000000,

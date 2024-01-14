@@ -1,4 +1,5 @@
-// 枚举：固件状态码
+use crate::mailbox::MailBoxAccess;
+
 #[repr(u32)]
 pub(crate) enum RpiFirmwarePropertyStatus {
     Request = 0,
@@ -6,7 +7,6 @@ pub(crate) enum RpiFirmwarePropertyStatus {
     Error = 0x80000001,
 }
 
-// 结构体：固件属性标签头
 #[derive(Debug, Default)]
 pub(crate) struct RpiFirmwarePropertyTagHeader {
     pub tag: u32,
@@ -140,4 +140,58 @@ pub enum RpiFirmwarePropertyTag {
     SetDisplayPower = 0x00048019,
     GetCommandLine = 0x00050001,
     GetDmaChannels = 0x00060001,
+}
+
+const ARM_IO_BASE: usize = 0xFE000000;
+const MAIL_BOX_BASE: usize = ARM_IO_BASE + 0xB880;
+const MAILBOX_STATUS_EMPTY: u32 = 0x40000000;
+const MAILBOX_STATUS_FULL: u32 = 0x80000000;
+const MAILBOX0_READ: usize = MAIL_BOX_BASE + 0x00;
+const MAILBOX0_STATUS: usize = MAIL_BOX_BASE + 0x18;
+const MAILBOX1_WRITE: usize = MAIL_BOX_BASE + 0x20;
+const MAILBOX1_STATUS: usize = MAIL_BOX_BASE + 0x38;
+
+pub struct MailBoxAccessImpl {
+   n_channel: u32, 
+}
+impl MailBoxAccessImpl {
+  pub fn new()->Self{
+    Self { n_channel: 8 }
+  }  
+} 
+
+use log::debug;
+
+impl MailBoxAccess for MailBoxAccessImpl {
+    fn read(&self) -> u32 {
+        while read32(MAILBOX0_STATUS) == MAILBOX_STATUS_EMPTY{
+            //println!("Mailbox is empty");
+        }
+
+        loop {
+            let r = read32(MAILBOX0_READ);
+            if (r & 0xf) == self.n_channel {
+                return r & !0xf;
+            }
+        }
+    }
+
+    fn write(&self, data: u32) {
+        while read32(MAILBOX1_STATUS) == MAILBOX_STATUS_FULL {
+            //println!("Mailbox is full");
+        }
+        debug!("mailbox write 0x{:X}", data);
+        write32(MAILBOX1_WRITE, data  | self.n_channel);
+    }
+}
+
+fn read32(addr: usize) -> u32 {
+    let vaddr = phys_to_virt(addr.into());
+    unsafe { (vaddr.as_mut_ptr() as *const u32).read_volatile()}
+}
+fn write32(addr: usize, data: u32) -> () {
+    let vaddr = phys_to_virt(addr.into());
+    unsafe {
+        (vaddr.as_mut_ptr() as *mut u32).write_volatile(data)
+    }
 }

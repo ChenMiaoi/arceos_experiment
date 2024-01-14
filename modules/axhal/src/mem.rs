@@ -109,6 +109,14 @@ fn kernel_image_regions() -> impl Iterator<Item = MemRegion> {
             flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
             name: ".bss",
         },
+
+        MemRegion{
+            paddr: 0x100_000.into(),
+            size: 0x1000,
+            flags:MemRegionFlags::RESERVED|MemRegionFlags::READ| MemRegionFlags::WRITE,
+            name: "mailbox"
+        }
+
     ]
     .into_iter()
 }
@@ -130,7 +138,10 @@ pub(crate) fn default_mmio_regions() -> impl Iterator<Item = MemRegion> {
 /// Returns the default free memory regions (kernel image end to physical memory end).
 #[allow(dead_code)]
 pub(crate) fn default_free_regions() -> impl Iterator<Item = MemRegion> {
-    let start = virt_to_phys((_ekernel as usize).into()).align_up_4k();
+    // let start = virt_to_phys((_ekernel as usize).into()).align_up_4k();
+
+    let start = PhysAddr::from(0x101_000).align_up_4k();
+
     let end = PhysAddr::from(axconfig::PHYS_MEMORY_END).align_down_4k();
     core::iter::once(MemRegion {
         paddr: start,
