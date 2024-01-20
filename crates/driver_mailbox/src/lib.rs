@@ -13,6 +13,5 @@ pub mod mailbox;
 pub mod bcm;
 
 
-use axhal::mem::phys_to_virt;
 
 

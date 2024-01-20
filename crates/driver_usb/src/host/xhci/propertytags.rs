@@ -1,39 +1,42 @@
-use core::{usize, mem::size_of, ptr::{slice_from_raw_parts_mut, slice_from_raw_parts}, alloc::Layout, time::Duration};
+use core::{
+    alloc::Layout,
+    mem::size_of,
+    ptr::{slice_from_raw_parts, slice_from_raw_parts_mut},
+    time::Duration,
+    usize, arch::asm,
+};
 
-use axhal::mem::{PAGE_SIZE_4K, phys_to_virt, virt_to_phys};
+use axhal::mem::{phys_to_virt, virt_to_phys, PAGE_SIZE_4K};
 use log::debug;
 use xhci::registers::runtime;
 
 use super::arm_mailbox::MailBox;
 
 pub const BCM_MAILBOX_PROP_OUT: u32 = 8;
-const GPU_MEM_BASE: usize = 0x40000000;
+const GPU_MEM_BASE: usize = 0xC0000000;
 const CORES: usize = axconfig::SMP;
 const MEM_KERNEL_START: usize = axconfig::KERNEL_BASE_PADDR;
 const MEGABYTE: usize = 0x100000;
 const MEM_COHERENT_REGION: usize = 0x500000;
 
-pub struct PropertyTags{
+pub struct PropertyTags {}
 
-}
-
-fn bus_address(addr: usize)-> usize{
+fn bus_address(addr: usize) -> usize {
     // addr | GPU_MEM_BASE
-    (addr  & !GPU_MEM_BASE) | GPU_MEM_BASE
+    (addr & !GPU_MEM_BASE) | GPU_MEM_BASE
 }
 
-fn get_coherent_page(n_slot: usize)->usize{
-    MEM_COHERENT_REGION + n_slot* PAGE_SIZE_4K
+fn get_coherent_page(n_slot: usize) -> usize {
+    MEM_COHERENT_REGION + n_slot * PAGE_SIZE_4K
 }
 
-impl PropertyTags{
-    pub fn get(
-        // tag: &TProperyTag
-    )->Self{        
+impl PropertyTags {
+    pub fn get(// tag: &TProperyTag
+    ) -> Self {
         let mailbox = MailBox::new(BCM_MAILBOX_PROP_OUT);
         // let p_buffer_phy = get_coherent_page(0);
 
-        let p_buffer = phys_to_virt(0x100_000.into()).as_usize();
+        let p_buffer = phys_to_virt(0x100000.into()).as_usize();
 
         // let layout = Layout::from_size_align(16 * 12 + 1 << 16, 16).unwrap();
         // let vaddr = axalloc::global_allocator().alloc(layout).unwrap();
@@ -44,7 +47,7 @@ impl PropertyTags{
 
         debug!("p_buffer: @virt {:x}", p_buffer);
 
-        let buffer = unsafe{&mut*(p_buffer  as *mut TPropertyBuffer)};
+        let buffer = unsafe { &mut *(p_buffer as *mut TPropertyBuffer) };
 
         debug!("buffer: {:p}", buffer);
 
@@ -67,19 +70,40 @@ impl PropertyTags{
         //     *end = 0;
         // }
 
-        unsafe{
-            let buffer_size = size_of::<TPropertyBuffer>()+ size_of::<TProperyTag>();
-            let buffer_size_with_end = buffer_size + size_of::<u32>();
-            
-            debug!("buffer_size_with_end: {:x}", buffer_size_with_end);
+        unsafe {
+            let mut i = 0;
+            let num_fill = 1;
+            let p = &mut *slice_from_raw_parts_mut(p_buffer as *mut u32, 50);
 
-            buffer.n_code = PropertyCode::Request;
-            buffer.bffer_size = buffer_size_with_end as u32;
-            buffer.tag.tag_id= PropTag::GetFirmwareRevision;
-            buffer.tag.value_bufsize=0;
-            buffer.tag.code_and_value_len=0;
-            *((p_buffer +  buffer_size) as *mut u32) = 0;
-            
+            p[i] = 0; // size. Filled in below
+            i += 1;
+            p[i] = 0x00000000;
+            i += 1;
+            p[i] = PropTag::GetFirmwareRevision as u32;
+            i += 1;
+            p[i] = 1 << 2;
+            i += 1;
+            p[i] = 0 << 2;
+            i += 1;
+            for j in 0..num_fill {
+                p[i] = 0x00000000;
+                i += 1;
+            }
+            p[i] = 0x00000000; // end tag
+            i += 1;
+            p[0] = (i * size_of::<u32>()) as u32; // actual size
+
+            // const buffer_size: usize = size_of::<TPropertyBuffer>();
+            // const buffer_size_with_end: usize = buffer_size + size_of::<u32>();
+
+            // debug!("buffer_size_with_end: {:x}", buffer_size_with_end);
+
+            // buffer.n_code = PropertyCode::Request;
+            // buffer.bffer_size = buffer_size_with_end as u32;
+            // buffer.tag.tag_id= PropTag::GetFirmwareRevision;
+            // buffer.tag.value_bufsize=0;
+            //             buffer.tag.code_and_value_len=0;
+            // ((p_buffer +  buffer_size) as *mut u32).write(0);
         }
 
         debug!("buffer {:?}", buffer);
@@ -90,14 +114,12 @@ impl PropertyTags{
         // 发送
         let send_addr = bus_address(send_addr);
         use aarch64_cpu::asm::barrier::{self, SY};
-        
-        barrier::dsb(SY);
 
-        let result = mailbox.write_read(send_addr as u32);
+        // barrier::dsb(SY);
 
-        barrier::dmb(SY);
+        let result = mailbox.write_read((send_addr as u32));
 
-
+        // barrier::dmb(SY);
 
         debug!("read: 0x{:X}", result);
         // if (send_addr != result as usize){
@@ -106,44 +128,47 @@ impl PropertyTags{
 
         debug!("wait for result...");
 
-        axhal::time::busy_wait(Duration::from_secs(1));
+        
         // while buffer.n_code == PropertyCode::Request {}
 
-        debug!("tag result: {:?}", buffer);
+        axhal::time::busy_wait(Duration::from_secs(1));
 
-        Self{}
+        unsafe {
+            let b = &(p_buffer as *mut TPropertyBuffer).read_volatile();
+
+            debug!("tag result: {:?}", buffer);
+        }
+
+        Self {}
     }
 }
 
-
 #[repr(u32)]
 #[derive(Debug)]
-pub enum PropTag{
+pub enum PropTag {
     NotifyXhciReset = 0x00030058,
     GetFirmwareRevision = 0x1,
+    GetBoardModel = 0x00010001,
 }
 #[repr(u32)]
 #[derive(Debug, PartialEq, Eq)]
-pub enum PropertyCode{
+pub enum PropertyCode {
     Request = 0x00000000,
     ResponseSuccess = 0x80000000,
     ResponseFailure = 0x80000001,
 }
 
-
-
 #[repr(C)]
 #[derive(Debug)]
-pub struct TProperyTag{
+pub struct TProperyTag {
     tag_id: PropTag,
     value_bufsize: u32,
     code_and_value_len: u32,
 }
 #[repr(C)]
 #[derive(Debug)]
-struct TPropertyBuffer
-{
-	bffer_size: u32,			// bytes
-	n_code: PropertyCode,
+struct TPropertyBuffer {
+    bffer_size: u32, // bytes
+    n_code: PropertyCode,
     tag: TProperyTag,
 }

@@ -1,6 +1,7 @@
 //! AArch64 VMSAv8-64 translation table format descriptors.
 
 use aarch64_cpu::registers::MAIR_EL1;
+use bitflags::Flags;
 use core::fmt;
 use memory_addr::PhysAddr;
 
@@ -81,6 +82,11 @@ impl DescriptorAttr {
         if matches!(idx, MemAttr::Normal | MemAttr::NormalNonCacheable) {
             bits |= Self::INNER.bits() | Self::SHAREABLE.bits();
         }
+
+        // if matches!(idx, MemAttr::Device){
+        //     bits |= Self::INNER.bits() | Self::SHAREABLE.bits();
+        // }
+
         Self::from_bits_retain(bits)
     }
 
@@ -101,12 +107,13 @@ impl MemAttr {
     /// attributes in the descriptors.
     pub const MAIR_VALUE: u64 = {
         // Device-nGnRE memory
-        let attr0 = MAIR_EL1::Attr0_Device::nonGathering_nonReordering_EarlyWriteAck.value;
+        let attr0 = MAIR_EL1::Attr0_Device::nonGathering_nonReordering_noEarlyWriteAck.value;
         // Normal memory
         let attr1 = MAIR_EL1::Attr1_Normal_Inner::WriteBack_NonTransient_ReadWriteAlloc.value
             | MAIR_EL1::Attr1_Normal_Outer::WriteBack_NonTransient_ReadWriteAlloc.value;
         let attr2 = MAIR_EL1::Attr2_Normal_Inner::NonCacheable.value
             + MAIR_EL1::Attr2_Normal_Outer::NonCacheable.value;
+
         attr0 | attr1 | attr2 // 0x44_ff_04
     };
 }

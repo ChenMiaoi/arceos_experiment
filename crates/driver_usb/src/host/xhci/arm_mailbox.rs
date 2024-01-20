@@ -81,13 +81,13 @@ fn read32(addr: usize) -> u32 {
     let vaddr = phys_to_virt(addr.into());
     unsafe { 
         // *(vaddr.as_ptr() as *const u32)
+        // u32::from_le((vaddr.as_mut_ptr() as *const u32).read_volatile())
         (vaddr.as_mut_ptr() as *const u32).read_volatile()
      }
 }
 fn write32(addr: usize, data: u32) -> () {
     let vaddr = phys_to_virt(addr.into());
     unsafe {
-        // *(vaddr.as_mut_ptr() as *mut u32) = data;
         (vaddr.as_mut_ptr() as *mut u32).write_volatile(data)
     }
 }

@@ -22,7 +22,7 @@ pub(crate) unsafe fn init_boot_page_table(
     // 0x0000_0000_0000..0x0000_4000_0000, 1G block, device memory
     boot_pt_l1[0] = A64PTE::new_page(
         PhysAddr::from(0),
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE ,
         true,
     );
     // 0x0000_4000_0000..0x0000_8000_0000, 1G block, normal memory

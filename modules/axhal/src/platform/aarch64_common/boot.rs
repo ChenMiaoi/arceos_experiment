@@ -5,6 +5,8 @@ use tock_registers::interfaces::{ReadWriteable, Readable, Writeable};
 
 use axconfig::TASK_STACK_SIZE;
 
+use super::mailbox::MailBoxImpl;
+
 #[link_section = ".bss.stack"]
 static mut BOOT_STACK: [u8; TASK_STACK_SIZE] = [0; TASK_STACK_SIZE];
 
@@ -55,9 +57,15 @@ unsafe fn switch_to_el1() {
         ELR_EL2.set(LR.get());
         asm::eret();
     }
+
+
+
 }
 
 unsafe fn init_mmu() {
+    let mbox = MailBoxImpl::new(8);
+    mbox.send();
+
     MAIR_EL1.set(MemAttr::MAIR_VALUE);
 
     // Enable TTBR0 and TTBR1 walks, page size = 4K, vaddr size = 48 bits, paddr size = 40 bits.
@@ -86,6 +94,7 @@ unsafe fn init_mmu() {
 
     // Enable the MMU and turn on I-cache and D-cache
     SCTLR_EL1.modify(SCTLR_EL1::M::Enable + SCTLR_EL1::C::Cacheable + SCTLR_EL1::I::Cacheable);
+    // SCTLR_EL1.modify(SCTLR_EL1::M::Enable + SCTLR_EL1::C::NonCacheable + SCTLR_EL1::I::Cacheable);
     barrier::isb(barrier::SY);
 }
 

@@ -1,4 +1,5 @@
 mod boot;
+pub mod mailbox;
 
 pub mod generic_timer;
 #[cfg(not(platform_family = "aarch64-raspi"))]

@@ -124,6 +124,8 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     axlog::init();
     axlog::set_max_level(option_env!("AX_LOG").unwrap_or("")); // no effect if set `log-level-*` features
     info!("Logging is enabled.");
+    info!("mail result: {}", axhal::mailbox_re());
+
     info!("Primary CPU {} started, dtb = {:#x}.", cpu_id, dtb);
 
     info!("Found physcial memory regions:");
@@ -136,6 +138,7 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
             r.flags
         );
     }
+
 
     #[cfg(feature = "alloc")]
     init_allocator();
@@ -297,3 +300,4 @@ fn init_tls() {
     unsafe { axhal::arch::write_thread_pointer(main_tls.tls_ptr() as usize) };
     core::mem::forget(main_tls);
 }
+

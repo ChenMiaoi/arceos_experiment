@@ -1,6 +1,5 @@
-use core::{ptr::slice_from_raw_parts_mut, mem::size_of};
-use log::debug;
-use crate::mailbox::{MailBox, Page, MailBoxMessage};
+use core::{mem::size_of, ptr::{slice_from_raw_parts_mut, slice_from_raw_parts}, cell::UnsafeCell};
+
 
 #[repr(u32)]
 pub(crate) enum RpiFirmwarePropertyStatus {
@@ -155,19 +154,19 @@ const MAILBOX1_STATUS: usize = MAIL_BOX_BASE + 0x38;
 
 pub const BCM_MAILBOX_PROP_OUT: u32 = 8;
 const GPU_MEM_BASE: usize = 0xC0000000;
-
+use crate:: mailbox_re_set;
 
 pub struct MailBoxImpl {
-   n_channel: u32, 
+    n_channel: u32,
 }
 impl MailBoxImpl {
-    pub fn new(n_channel: u32)->Self{
-        Self{n_channel}
+    pub fn new(n_channel: u32) -> Self {
+        Self { n_channel }
     }
 
     fn read(&self) -> u32 {
-        while read32(MAILBOX0_STATUS) == MAILBOX_STATUS_EMPTY{
-            //println!("Mailbox is empty");
+        while read32(MAILBOX0_STATUS) == MAILBOX_STATUS_EMPTY {
+            // println!("Mailbox is empty");
         }
 
         loop {
@@ -180,97 +179,102 @@ impl MailBoxImpl {
 
     fn write(&self, data: u32) {
         while read32(MAILBOX1_STATUS) == MAILBOX_STATUS_FULL {
-            //println!("Mailbox is full");
+            // println!("Mailbox is full");
         }
-        debug!("mailbox write 0x{:X}", data);
-        write32(MAILBOX1_WRITE, data  | self.n_channel);
-    } 
-     pub fn flush(&self){
-        loop{
+        // info!("mailbox write 0x{:X}", data);
+        write32(MAILBOX1_WRITE, data | self.n_channel);
+    }
+    pub fn flush(&self) {
+        loop {
             let r = read32(MAILBOX0_STATUS);
             if r == MAILBOX_STATUS_EMPTY {
                 return;
             }
             read32(MAILBOX0_READ);
-            
         }
     }
 
-    pub fn write_read(&self, data: u32)->u32{
+    pub fn write_read(&self, data: u32) -> u32 {
         self.flush();
-        debug!("flush ok");
+        // info!("flush ok");
         self.write(data);
         while read32(MAILBOX1_STATUS) != MAILBOX_STATUS_EMPTY {
-            //println!("Mailbox is full");
+            // println!("Mailbox is full");
         }
-        debug!("write ok");
+        // info!("write ok");
         self.read()
     }
-}
 
-impl MailBox for MailBoxImpl {
-    fn send(&self, msg: impl MailBoxMessage) {
-        // let data = msg.as_data();        
-        let buffer = 0x100000usize;
-        unsafe{
-            // let mut i = 0;
-            // let num_fill = 1;
-            // let p = &mut *slice_from_raw_parts_mut(buffer as *mut u32, 0x50);
+    pub fn send(&self) {
+        // let data = msg.as_data();
+        // let buffer = 0x10_0000usize;
+        let buffer = 0x10_0000usize;
 
-            // p[i] = 0; // size. Filled in below
-            // i += 1;
-            // p[i] = 0x00000000;
-            // i += 1;
-            // p[i] = 1; // get version
-            // i += 1;
-            // p[i] = 1 << 2;
-            // i += 1;
-            // p[i] = 0 << 2;
-            // i += 1;
-            // for j in 0..num_fill {
-            //     p[i] = 0x00000000;
-            //     i += 1;
-            // }
-            // p[i] = 0x00000000; // end tag
-            // i += 1;
-            // p[0] = (i * size_of::<u32>()) as u32; // actual size
+        // let addr = bus_address(buffer) as u32; 
+        let addr = bus_address(buffer) as u32; 
 
+        // mailbox_tag
+        unsafe {
+            let mut i = 0;
+            let num_fill = 1;
+
+            // let data = [0u32; 20];
+
+
+            // let p = &mut *slice_from_raw_parts_mut(buffer as *mut u8, 80);
+            let p = &mut *slice_from_raw_parts_mut(buffer as *mut u32, 20);
+            // let data = &* slice_from_raw_parts(data.as_ptr() as *const u8, 80);
+
+            // p.copy_from_slice(data);
+
+            p[i] = 0; // size. Filled in below
+            i += 1;
+            p[i] = 0x00000000;
+            i += 1;
+            p[i] = 1; // get version
+            i += 1;
+            p[i] = 1 << 2;
+            i += 1;
+            p[i] = 0 << 2;
+            i += 1;
+            for j in 0..num_fill {
+                 p[i] = 0x00000000;
+                i += 1;
+            }
+            p[i] = 0x00000000; // end tag
+            i += 1;
+            p[0] = (i * size_of::<u32>()) as u32; // actual size
 
             // buff.copy_from_slice(data);
         }
-        let addr = bus_address(buffer) as u32;
-        debug!("mailbox write addr: {:X}", addr);
+
+
+        // info!("mailbox write addr: {:X},  phy_addr: {:X}", addr, phy);
         let out = self.write_read(addr);
-        debug!("mailbox read addr: {:X}", out);
+        // info!("mailbox read addr: {:X}", out);
 
-        unsafe{
-           
-            let p = &mut *slice_from_raw_parts_mut(buffer as *mut u32, 0x50);
-
-            debug!("mailbox out: {:X}", p[1]);
+        unsafe {
+            loop {
+                let p = &mut *slice_from_raw_parts_mut(buffer as *mut u32, 0x50);
+                let r = p[1];
+                if r != 0 {
+                    // mailbox_re_set(r) ;
+                    break;
+                }
+            }
         }
-
     }
 }
 
 fn read32(addr: usize) -> u32 {
-    unsafe { (addr as *const u32).read_volatile()}
+    unsafe { (addr as *const u32).read_volatile() }
 }
 fn write32(addr: usize, data: u32) -> () {
-    unsafe {
-        (addr as *mut u32).write_volatile(data)
-    }
+    unsafe { (addr as *mut u32).write_volatile(data) }
 }
 fn bus_address(addr: usize) -> usize {
     // addr | GPU_MEM_BASE
     (addr & !GPU_MEM_BASE) | GPU_MEM_BASE
 }
 
-pub struct MsgGetFirmwareRevision{}
-
-
-impl MailBoxMessage for MsgGetFirmwareRevision {
-    fn as_data<'a>(&'a self)-> &'a [u8] {
-        todo!()
-    }
-}
+pub struct MsgGetFirmwareRevision {}

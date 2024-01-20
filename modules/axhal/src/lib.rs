@@ -35,6 +35,23 @@ extern crate log;
 
 mod platform;
 
+
+static mut MAILBOX_RE: u32 = 0;
+
+pub fn mailbox_re_set(v: u32){
+    unsafe{
+        // *MAILBOX_RE.get_mut() = v;
+        MAILBOX_RE = v;
+    }
+}
+pub fn mailbox_re()->u32{
+    unsafe{
+        // MAILBOX_RE.get()
+        MAILBOX_RE
+    }
+}
+
+
 pub mod arch;
 pub mod cpu;
 pub mod mem;
@@ -72,6 +89,8 @@ pub mod misc {
 pub mod mp {
     pub use super::platform::mp::*;
 }
+
+use core::cell::UnsafeCell;
 
 pub use self::platform::platform_init;
 

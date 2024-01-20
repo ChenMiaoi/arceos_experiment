@@ -493,6 +493,7 @@ dependencies = [
  "axtask",
  "axusb",
  "crate_interface",
+ "driver_mailbox",
  "kernel_guard",
  "lazy_init",
  "percpu",
@@ -925,9 +926,9 @@ dependencies = [
 name = "driver_mailbox"
 version = "0.1.0"
 dependencies = [
- "axhal",
  "lazy_init",
  "log",
+ "memory_addr",
 ]
 
 [[package]]
