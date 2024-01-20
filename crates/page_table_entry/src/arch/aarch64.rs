@@ -51,7 +51,7 @@ bitflags::bitflags! {
         /// Access permissions limit for subsequent levels of lookup: access at EL0 not permitted.
         const AP_NO_EL0_TABLE =     1 << 61;
         /// Access permissions limit for subsequent levels of lookup: write access not permitted.
-        const AP_NO_WRITE_TABLE =   1 << 62;
+        // const AP_NO_WRITE_TABLE =   1 << 62;
         /// For memory accesses from Secure state, specifies the Security state for subsequent
         /// levels of lookup.
         const NS_TABLE =            1 << 63;
@@ -83,9 +83,9 @@ impl DescriptorAttr {
             bits |= Self::INNER.bits() | Self::SHAREABLE.bits();
         }
 
-        // if matches!(idx, MemAttr::Device){
-        //     bits |= Self::INNER.bits() | Self::SHAREABLE.bits();
-        // }
+        if matches!(idx, MemAttr::Device){
+            bits |= Self::SHAREABLE.bits();
+        }
 
         Self::from_bits_retain(bits)
     }
@@ -148,6 +148,7 @@ impl From<MappingFlags> for DescriptorAttr {
     fn from(flags: MappingFlags) -> Self {
         let mut attr = if flags.contains(MappingFlags::DEVICE) {
             Self::from_mem_attr(MemAttr::Device)
+
         } else if flags.contains(MappingFlags::UNCACHED) {
             Self::from_mem_attr(MemAttr::NormalNonCacheable)
         } else {

@@ -63,8 +63,8 @@ unsafe fn switch_to_el1() {
 }
 
 unsafe fn init_mmu() {
-    let mbox = MailBoxImpl::new(8);
-    mbox.send();
+    // let mbox = MailBoxImpl::new(8);
+    // mbox.send();
 
     MAIR_EL1.set(MemAttr::MAIR_VALUE);
 

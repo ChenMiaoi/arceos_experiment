@@ -227,11 +227,30 @@ impl MailBoxImpl {
 
             // p.copy_from_slice(data);
 
+            // p[i] = 0; // size. Filled in below
+            // i += 1;
+            // p[i] = 0x00000000;
+            // i += 1;
+            // p[i] = 1; // get version
+            // i += 1;
+            // p[i] = 1 << 2;
+            // i += 1;
+            // p[i] = 0 << 2;
+            // i += 1;
+            // for j in 0..num_fill {
+            //      p[i] = 0x00000000;
+            //     i += 1;
+            // }
+            // p[i] = 0x00000000; // end tag
+            // i += 1;
+            // p[0] = (i * size_of::<u32>()) as u32; // actual size
+
+            // buff.copy_from_slice(data); 
             p[i] = 0; // size. Filled in below
             i += 1;
             p[i] = 0x00000000;
             i += 1;
-            p[i] = 1; // get version
+            p[i] = RpiFirmwarePropertyTag::GetFirmwareHash as u32; // get version
             i += 1;
             p[i] = 1 << 2;
             i += 1;
@@ -244,8 +263,6 @@ impl MailBoxImpl {
             p[i] = 0x00000000; // end tag
             i += 1;
             p[0] = (i * size_of::<u32>()) as u32; // actual size
-
-            // buff.copy_from_slice(data);
         }
 
 
@@ -254,14 +271,14 @@ impl MailBoxImpl {
         // info!("mailbox read addr: {:X}", out);
 
         unsafe {
-            loop {
-                let p = &mut *slice_from_raw_parts_mut(buffer as *mut u32, 0x50);
-                let r = p[1];
-                if r != 0 {
-                    // mailbox_re_set(r) ;
-                    break;
-                }
-            }
+            // loop {
+            //     let p = &mut *slice_from_raw_parts_mut(buffer as *mut u32, 0x50);
+            //     let r = p[1];
+            //     if r != 0 {
+            //         // mailbox_re_set(r) ;
+            //         break;
+            //     }
+            // }
         }
     }
 }

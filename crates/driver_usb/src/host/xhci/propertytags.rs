@@ -37,6 +37,7 @@ impl PropertyTags {
         // let p_buffer_phy = get_coherent_page(0);
 
         let p_buffer = phys_to_virt(0x100000.into()).as_usize();
+        // let p_buffer = 0x100000;
 
         // let layout = Layout::from_size_align(16 * 12 + 1 << 16, 16).unwrap();
         // let vaddr = axalloc::global_allocator().alloc(layout).unwrap();
@@ -71,27 +72,27 @@ impl PropertyTags {
         // }
 
         unsafe {
-            let mut i = 0;
-            let num_fill = 1;
-            let p = &mut *slice_from_raw_parts_mut(p_buffer as *mut u32, 50);
+            // let mut i = 0;
+            // let num_fill = 1;
+            // let p = &mut *slice_from_raw_parts_mut(p_buffer as *mut u32, 50);
 
-            p[i] = 0; // size. Filled in below
-            i += 1;
-            p[i] = 0x00000000;
-            i += 1;
-            p[i] = PropTag::GetFirmwareRevision as u32;
-            i += 1;
-            p[i] = 1 << 2;
-            i += 1;
-            p[i] = 0 << 2;
-            i += 1;
-            for j in 0..num_fill {
-                p[i] = 0x00000000;
-                i += 1;
-            }
-            p[i] = 0x00000000; // end tag
-            i += 1;
-            p[0] = (i * size_of::<u32>()) as u32; // actual size
+            // p[i] = 0; // size. Filled in below
+            // i += 1;
+            // p[i] = 0x00000000;
+            // i += 1;
+            // p[i] = PropTag::NotifyXhciReset as u32;
+            // i += 1;
+            // p[i] = 1 << 2;
+            // i += 1;
+            // p[i] = 0 << 2;
+            // i += 1;
+            // for j in 0..num_fill {
+            //     p[i] = 0x00000000;
+            //     i += 1;
+            // }
+            // p[i] = 0x00000000; // end tag
+            // i += 1;
+            // p[0] = (i * size_of::<u32>()) as u32; // actual size
 
             // const buffer_size: usize = size_of::<TPropertyBuffer>();
             // const buffer_size_with_end: usize = buffer_size + size_of::<u32>();
@@ -103,10 +104,29 @@ impl PropertyTags {
             // buffer.tag.tag_id= PropTag::GetFirmwareRevision;
             // buffer.tag.value_bufsize=0;
             //             buffer.tag.code_and_value_len=0;
-            // ((p_buffer +  buffer_size) as *mut u32).write(0);
+            // ((p_buffer +  buffer_size) as *mut u32).write(0);            
+            let mut i = 0;
+            let num_fill = 1;
+            let p = &mut *slice_from_raw_parts_mut(p_buffer as *mut u32, 50);
+
+            p[i] = 0; // size. Filled in below
+            i += 1;
+            p[i] = 0x00000000;
+            i += 1;
+            p[i] = PropTag::NotifyXhciReset as u32;
+            i += 1;
+            p[i] = 4;
+            i += 1;
+            p[i] = 0;
+            i += 1;
+            p[i] = 0x100000;
+            i += 1;
+            p[i] = 0x00000000; // end tag
+            i += 1;
+            p[0] = (i * size_of::<u32>()) as u32; // actual size
         }
 
-        debug!("buffer {:?}", buffer);
+        debug!("buffer request: {:?}", buffer);
 
         let send_addr = p_buffer;
         // let send_addr = virt_to_phys(p_buffer.into()).as_usize();
@@ -129,9 +149,9 @@ impl PropertyTags {
         debug!("wait for result...");
 
         
-        // while buffer.n_code == PropertyCode::Request {}
+        while buffer.n_code == PropertyCode::Request {}
 
-        axhal::time::busy_wait(Duration::from_secs(1));
+        // axhal::time::busy_wait(Duration::from_secs(1));
 
         unsafe {
             let b = &(p_buffer as *mut TPropertyBuffer).read_volatile();
