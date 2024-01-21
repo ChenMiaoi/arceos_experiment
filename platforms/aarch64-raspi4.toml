@@ -24,8 +24,8 @@ mmio-regions = [
     ["0xFE00_0000", "0xFFF000"],      # io base
     # ["0xFD50_0000", "0x9400"],      # pcie ecam
     # ["0xFD50_0000", "0xA000"],      # pcie ecam
-    ["0xFD50_0000", "0x1A000"],      # pcie ecam
-
+    ["0xFD50_0000", "0xFF000"],      # pcie ecam
+    ["0xFD60_0000", "0x01000"],
     # ["0xF8000000", "0x4000000"],      # pcie
     ["0x6_0000_0000", "0x100000"],   # xhci
 

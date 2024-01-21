@@ -29,6 +29,7 @@ fn config_pci_device(
                             .expect("No memory ranges available for PCI BARs!")
                             .alloc(size as _)
                             .ok_or(DevError::NoMemory)?;
+                        debug!("  BAR {}: Memory [{:#x}, {:#x}]", bar, new_addr, new_addr + size as u64);
                         // let alloced = global_allocator.alloc(Layout::for_value(&new_addr));
                         if address_type == MemoryBarType::Width32 {
                             root.set_bar_32(bdf, bar, new_addr as _);

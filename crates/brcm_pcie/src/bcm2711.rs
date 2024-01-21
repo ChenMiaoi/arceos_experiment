@@ -8,6 +8,12 @@ use tock_registers::{
 
 use crate::BCM2711Hal;
 
+const PCI_DMA_BUS_ADDR: u32 = 0x02000000;
+const PCI_DMA_CPU_ADDR: u32 = 0;
+const PCI_DMA_SIZE: u32 = 0xC0000000;
+
+
+
 register_bitfields![
     u32,
     // /* BRCM_PCIE_CAP_REGS - Offset for the mandatory capability config regs */
@@ -346,6 +352,15 @@ impl<H: BCM2711Hal> BCM2711PCIeHostBridge<H> {
         regs.misc_misc_ctrl
             .modify(MISC_MISC_CTRL::MAX_BURST_SIZE::CLEAR);
 
+
+
+
+        let rc_bar2_offset = PCI_DMA_BUS_ADDR;
+        let rc_bar2_size = PCI_DMA_SIZE;
+
+
+
+
         // setup inbound memory view
         regs.misc_rc_bar2_config_lo
             .write(MISC_RC_BAR2_CONFIG_LO::VALUE_LO::init_val);
@@ -378,7 +393,7 @@ impl<H: BCM2711Hal> BCM2711PCIeHostBridge<H> {
         // wait for bits 4 and 5 of [0xfd504068] to be set, checking every 5000 us
         for _ in 0..20 {
             let val = regs.misc_pcie_status.read(MISC_PCIE_STATUS::CHECK_BITS);
-            log::trace!("val :{}", val);
+            // log::trace!("val :{}", val);
             if val == 0x3 {
                 break;
             }
@@ -388,7 +403,8 @@ impl<H: BCM2711Hal> BCM2711PCIeHostBridge<H> {
         // check if link is up
         {
             while regs.misc_pcie_status.read(MISC_PCIE_STATUS::CHECK_BITS) != 0x3 {
-                H::sleep(core::time::Duration::from_secs(1));
+                // H::sleep(core::time::Duration::from_secs(1));
+            H::sleep(core::time::Duration::from_micros(5));
             }
 
             // if val != 0x3 {

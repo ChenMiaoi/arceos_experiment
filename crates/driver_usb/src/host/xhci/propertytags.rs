@@ -155,8 +155,13 @@ impl PropertyTags {
 
         unsafe {
             let b = &(p_buffer as *mut TPropertyBuffer).read_volatile();
+            let r = b.tag.code_and_value_len;
+            let p = &mut *slice_from_raw_parts_mut(p_buffer as *mut u32, 50);
+            let r_len = r << 1 >> 1;
+            let r_v = p[5];
 
             debug!("tag result: {:?}", buffer);
+            debug!("result value: 0x{:X}", r_v);
         }
 
         Self {}
