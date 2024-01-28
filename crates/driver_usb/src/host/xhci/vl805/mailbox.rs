@@ -1,13 +1,14 @@
+use alloc::vec::{self, Vec};
+use axalloc::global_no_cache_allocator;
+use axhal::mem::phys_to_virt;
+use axhal::time;
+use core::alloc::Allocator;
+use core::time::Duration;
 use core::{
     mem::size_of,
     ptr::{slice_from_raw_parts, slice_from_raw_parts_mut},
 };
-use axhal::time;
-use alloc::vec::{self, Vec};
-use axhal::mem::phys_to_virt;
 use log::debug;
- use core::time::Duration;
-
 
 pub const BCM_MAILBOX_PROP_OUT: u32 = 8;
 const GPU_MEM_BASE: usize = 0xC0000000;
@@ -31,7 +32,7 @@ impl Mailbox {
         };
     }
 
-    pub fn send(self, msg: &impl RaspiMsg, dma: &mut [u8])  {
+    pub fn send(self, msg: &impl RaspiMsg, dma: &mut [u8]) {
         msg.write_to(dma);
         unsafe {
             let mut send_addr = dma.as_ptr() as usize;
@@ -44,11 +45,11 @@ impl Mailbox {
 
             debug!("read: 0x{:X}", result);
             debug!("waiting for response...");
-            unsafe{
-                let buff =  &*slice_from_raw_parts(dma.as_ptr() as *const u32, dma.len() / 4);
-                while buff[1] == PropertyCode::Request as u32{}
+            unsafe {
+                let buff = &*slice_from_raw_parts(dma.as_ptr() as *const u32, dma.len() / 4);
+                while buff[1] == PropertyCode::Request as u32 {}
 
-                let re = buff[1] ;
+                let re = buff[1];
 
                 debug!("response: {:?}", re);
             }
@@ -74,7 +75,10 @@ impl Mailbox {
             //println!("Mailbox is full");
         }
         let w = data | self.n_channel;
-        debug!("mailbox write 0x{:X}", w);
+        debug!(
+            "mailbox write to channel:{:x} with 0x{:X}",
+            self.n_channel, w
+        );
         write32(MAILBOX1_WRITE, w);
     }
 
@@ -111,8 +115,7 @@ pub trait RaspiMsg {
     fn __tag_bytes(&self) -> Vec<u8>;
 
     fn write_to(&self, buff: &mut [u8]) {
-        let mut data: Vec<u32> = alloc::vec![];
-        data.push(0); // size
+        let mut data = Vec::new_in(global_no_cache_allocator());
         data.push(0); // request
         data.push(Self::ID as _);
 
@@ -159,7 +162,6 @@ impl RaspiMsg for MsgNotifyXhciReset {
     }
 }
 
-
 pub struct MsgGetFirmwareRevision {}
 impl RaspiMsg for MsgGetFirmwareRevision {
     const ID: PropTag = PropTag::GetFirmwareRevision;
@@ -169,7 +171,23 @@ impl RaspiMsg for MsgGetFirmwareRevision {
     }
 }
 
+pub struct GetBoardModel {}
+impl RaspiMsg for GetBoardModel {
+    const ID: PropTag = PropTag::GetBoardModel;
 
+    fn __tag_bytes(&self) -> Vec<u8> {
+        alloc::vec![]
+    }
+}
+
+pub struct GetBoardRevision {}
+impl RaspiMsg for GetBoardRevision {
+    const ID: PropTag = PropTag::GetBoardRevision;
+
+    fn __tag_bytes(&self) -> Vec<u8> {
+        alloc::vec![]
+    }
+}
 
 #[repr(u32)]
 #[derive(Debug)]
@@ -177,6 +195,7 @@ pub enum PropTag {
     NotifyXhciReset = 0x00030058,
     GetFirmwareRevision = 0x1,
     GetBoardModel = 0x00010001,
+    GetBoardRevision = 0x00010002,
 }
 #[repr(u32)]
 #[derive(Debug, PartialEq, Eq)]
