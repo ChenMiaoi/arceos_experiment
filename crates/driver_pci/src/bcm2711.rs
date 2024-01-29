@@ -1,3 +1,4 @@
+use crate::types::{ConfigCommand, ConifgPciPciBridge};
 use crate::{err::*, Access, PciAddress};
 use aarch64_cpu::registers::*;
 use core::{marker::PhantomData, ops::Add, ptr::NonNull};
@@ -7,7 +8,6 @@ use tock_registers::{
     register_bitfields, register_structs,
     registers::{ReadOnly, ReadWrite},
 };
-use crate::types::{ConfigCommand, ConifgPciPciBridge};
 
 register_bitfields![
     u32,
@@ -321,8 +321,15 @@ impl Access for BCM2711 {
     fn probe_bridge(mmio_base: usize, bridge: &ConifgPciPciBridge) {
         debug!("bridge bcm2711");
 
+        bridge.set_cache_line_size(64 / 4);
         bridge.set_memory_base((0xF8000000u32 >> 16) as u16);
         bridge.set_memory_limit((0xF8000000u32 >> 16) as u16);
+        bridge.set_control(0x01);
+        unsafe {
+            (bridge.cfg_addr as *mut u8)
+                .offset(0xac + 0x1c)
+                .write_volatile(0x10);
+        }
 
         bridge.to_header().set_command([
             ConfigCommand::MemorySpaceEnable,

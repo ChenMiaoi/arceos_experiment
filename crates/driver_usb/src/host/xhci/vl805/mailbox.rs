@@ -5,6 +5,7 @@ use core::{
 use axhal::time;
 use alloc::vec::{self, Vec};
 use axhal::mem::phys_to_virt;
+use bit_field::BitField;
 use log::{debug, info};
  use core::time::Duration;
 
@@ -58,6 +59,20 @@ impl Mailbox {
                 if res != PropertyCode::ResponseSuccess{
                     panic!("mailbox fail");
                 }
+
+                let respones_code = buff[4];
+
+                if respones_code.get_bit(31){
+                    debug!("has response");
+
+                    let len = respones_code.get_bits(0..31);
+                    debug!("response len {}", len);
+
+                    let value = buff.as_ptr().offset(5) as *const u32;
+
+                    debug!("value {:x}", *value);
+                }
+
             }
         }
     }
@@ -152,6 +167,7 @@ pub trait RaspiMsg {
             buff[0..ptr.len()].copy_from_slice(ptr);
         }
     }
+
 }
 
 pub struct MsgNotifyXhciReset {}
