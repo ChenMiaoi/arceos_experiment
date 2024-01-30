@@ -46,7 +46,6 @@ impl VL805 {
         // debug!("xhci wait for ready...");
         // while o.usbsts.read_volatile().controller_not_ready() {}
         // info!("xhci ok");
-
         VL805 {
             xhci_controller: XhciController::init(address),
         }
@@ -79,6 +78,7 @@ impl VL805 {
                     ConfigCommand::ParityErrorResponse,
                     ConfigCommand::SERREnable,
                 ]);
+
                 let vl805 = VL805::new(address as _);
                 return Some(vl805);
             }
