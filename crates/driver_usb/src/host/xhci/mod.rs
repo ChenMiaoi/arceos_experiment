@@ -1,10 +1,13 @@
 #[cfg(feature = "vl805")]
 pub mod vl805;
-use axhal::mem::{phys_to_virt, VirtAddr, PhysAddr};
+use axhal::mem::{phys_to_virt, PhysAddr, VirtAddr};
+use core::{alloc::Layout, num::NonZeroUsize, ptr::NonNull};
 use log::info;
 use xhci::accessor::Mapper;
-use core::{num::NonZeroUsize, alloc::Layout, ptr::NonNull};
 
+mod command_ring;
+mod event_ring;
+pub mod xhci_controller;
 
 #[derive(Clone, Copy)]
 struct MemoryMapper;

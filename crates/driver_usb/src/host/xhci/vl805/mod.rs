@@ -4,7 +4,10 @@ use core::{
 };
 mod mailbox;
 use self::mailbox::*;
-use super::MemoryMapper;
+use super::{
+    xhci_controller::{self, XhciController},
+    MemoryMapper,
+};
 use crate::dma::DMAVec;
 pub use crate::host::USBHostDriverOps;
 use driver_common::*;
@@ -17,7 +20,9 @@ use log::{debug, info};
 const VL805_VENDOR_ID: u16 = 0x1106;
 const VL805_DEVICE_ID: u16 = 0x3483;
 
-pub struct VL805 {}
+pub struct VL805 {
+    xhci_controller: XhciController,
+}
 
 impl BaseDriverOps for VL805 {
     fn device_name(&self) -> &str {
@@ -31,18 +36,20 @@ impl BaseDriverOps for VL805 {
 
 impl VL805 {
     fn new(address: usize) -> Self {
-        let mapper = MemoryMapper;
-        let regs = unsafe { xhci::Registers::new(address, mapper) };
-        let version = regs.capability.hciversion.read_volatile();
-        debug!("xhci version: {:x}", version.get());
-        let mut o = regs.operational;
-        debug!("xhci stat: {:?}", o.usbsts.read_volatile());
+        // let mapper = MemoryMapper;
+        // let regs = unsafe { xhci::Registers::new(address, mapper) };
+        // let version = regs.capability.hciversion.read_volatile();
+        // debug!("xhci version: {:x}", version.get());
+        // let mut o = regs.operational;
+        // debug!("xhci stat: {:?}", o.usbsts.read_volatile());
 
-        debug!("xhci wait for ready...");
-        while o.usbsts.read_volatile().controller_not_ready() {}
-        info!("xhci ok");
+        // debug!("xhci wait for ready...");
+        // while o.usbsts.read_volatile().controller_not_ready() {}
+        // info!("xhci ok");
 
-        VL805 {}
+        VL805 {
+            xhci_controller: XhciController::init(address),
+        }
     }
 
     pub fn probe_pci<A: Allocator>(config: &ConfigSpace, dma_alloc: &A) -> Option<Self> {
