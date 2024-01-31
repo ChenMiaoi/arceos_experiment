@@ -5,11 +5,14 @@ use super::{
     event_ring, MemoryMapper,
 };
 use core::num::NonZeroUsize;
+use std::sync::Barrier;
 
+use aarch64_cpu::asm::barrier;
 use axhal::mem::phys_to_virt;
 #[doc(no_inline)]
 pub use driver_common::{BaseDriverOps, DeviceType};
 use log::info;
+use page_table_entry::aarch64;
 use xhci::{
     accessor::Mapper,
     extended_capabilities::{self},
@@ -55,12 +58,15 @@ impl XhciController {
             event_ring: None,
             command_ring: None,
         };
-
+        barrier::dsb(barrier::SY);
+        barrier::dmb(barrier::SY);
         xhci_controller.startup_xhci();
         xhci_controller.configure_event_ring();
         //TODO configure command ring,dcbaa , scratch pad,exchanger,etc.
+        barrier::dsb(barrier::SY);
+        barrier::dmb(barrier::SY);
 
-        xhci_controller
+        xhci_controler
     }
 
     // 初始化控制器
