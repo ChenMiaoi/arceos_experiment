@@ -5,7 +5,6 @@ use super::{
     event_ring, MemoryMapper,
 };
 use core::num::NonZeroUsize;
-use std::sync::Barrier;
 
 use aarch64_cpu::asm::barrier;
 use axhal::mem::phys_to_virt;
@@ -58,13 +57,10 @@ impl XhciController {
             event_ring: None,
             command_ring: None,
         };
-        barrier::dsb(barrier::SY);
-        barrier::dmb(barrier::SY);
+        barrier::isb(barrier::SY);
         xhci_controller.startup_xhci();
         xhci_controller.configure_event_ring();
         //TODO configure command ring,dcbaa , scratch pad,exchanger,etc.
-        barrier::dsb(barrier::SY);
-        barrier::dmb(barrier::SY);
 
         xhci_controler
     }
@@ -80,6 +76,7 @@ impl XhciController {
             r.capability.hciversion.read_volatile().get()
         );
 
+        barrier::isb(barrier::SY);
         operational.usbcmd.update_volatile(|r| {
             r.clear_run_stop();
         });
@@ -87,15 +84,18 @@ impl XhciController {
         info!("waiting halt");
         while !operational.usbsts.read_volatile().hc_halted() {}
 
+        barrier::isb(barrier::SY);
         operational.usbcmd.update_volatile(|u| {
             u.set_host_controller_reset();
         });
 
+        barrier::isb(barrier::SY);
         info!("waiting reset");
         while operational.usbcmd.read_volatile().host_controller_reset() {}
 
         info!("xhci stat: {:?}", operational.usbsts.read_volatile());
 
+        barrier::isb(barrier::SY);
         info!("waiting for ready");
         while operational.usbsts.read_volatile().controller_not_ready() {}
 
@@ -108,6 +108,7 @@ impl XhciController {
             );
         });
 
+        barrier::isb(barrier::SY);
         info!("xhci ok");
 
         return ();
