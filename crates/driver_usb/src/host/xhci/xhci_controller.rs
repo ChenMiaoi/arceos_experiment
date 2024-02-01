@@ -59,10 +59,10 @@ impl XhciController {
         };
         barrier::isb(barrier::SY);
         xhci_controller.startup_xhci();
-        xhci_controller.configure_event_ring();
+        // xhci_controller.configure_event_ring();
         //TODO configure command ring,dcbaa , scratch pad,exchanger,etc.
 
-        xhci_controler
+        xhci_controller
     }
 
     // 初始化控制器
@@ -85,9 +85,13 @@ impl XhciController {
         while !operational.usbsts.read_volatile().hc_halted() {}
 
         barrier::isb(barrier::SY);
-        operational.usbcmd.update_volatile(|u| {
-            u.set_host_controller_reset();
-        });
+        // operational.usbcmd.update_volatile(|u| {
+        //     u.set_host_controller_reset();
+        // });
+        operational
+            .usbcmd
+            .read_volatile()
+            .set_host_controller_reset();
 
         barrier::isb(barrier::SY);
         info!("waiting reset");
@@ -97,19 +101,44 @@ impl XhciController {
 
         barrier::isb(barrier::SY);
         info!("waiting for ready");
-        while operational.usbsts.read_volatile().controller_not_ready() {}
+        // while operational.usbsts.read_volatile().controller_not_ready() {}
+        operational
+            .usbsts
+            .update_volatile(|u| while u.controller_not_ready() {});
+        //ref:https://github.com/toku-sa-n/ramen.git for check
 
-        operational.config.update_volatile(|c| {
-            c.set_max_device_slots_enabled(
+        // operational.config.update_volatile(|c| {
+        //     c.set_max_device_slots_enabled(
+        //         r.capability
+        //             .hcsparams1
+        //             .read_volatile()
+        //             .number_of_device_slots(),
+        //     );
+        // });
+
+        operational
+            .config
+            .read_volatile()
+            .set_max_device_slots_enabled(
                 r.capability
                     .hcsparams1
                     .read_volatile()
                     .number_of_device_slots(),
             );
-        });
 
         barrier::isb(barrier::SY);
         info!("xhci ok");
+
+        r.port_register_set
+            .into_iter()
+            .enumerate()
+            .for_each(|(i, p)| {
+                info!(
+                    "state of {i}:{},{}",
+                    p.portsc.current_connect_status(),
+                    p.portsc.connect_status_change()
+                )
+            });
 
         return ();
     }
