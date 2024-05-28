@@ -6,6 +6,7 @@ pub mod mp;
 #[cfg(feature = "irq")]
 pub mod irq {
     pub use crate::platform::aarch64_common::gic::*;
+    // pub const TIMER_IRQ_NUM: usize = 30; // sus
 }
 
 pub mod console {

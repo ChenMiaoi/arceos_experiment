@@ -49,7 +49,7 @@ impl<A: Allocator + Clone> VL805<A> {
         // info!("XHCI reset HC");
         super::init_statics(mmio_base);
         super::init_xhci();
-        super::enum_port();
+        // super::enum_port();
         VL805 {
             base_addr: mmio_base,
             alloc,
