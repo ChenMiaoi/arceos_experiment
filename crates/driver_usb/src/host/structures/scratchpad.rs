@@ -1,61 +1,91 @@
-use axhal::mem::{self, VirtAddr};
+use crate::host::page_box::PageBox;
+
+use super::{dcbaa, registers};
+use alloc::vec::Vec;
+use axhal::mem::VirtAddr;
 use conquer_once::spin::OnceCell;
-use futures_intrusive::buffer;
-use log::debug;
-use page_box::PageBox;
-use spinning_top::Spinlock;
+use core::alloc::Layout;
+use core::convert::TryInto;
+use os_units::Bytes;
 
-use super::{
-    registers,
-    xhci_command_manager::COMMAND_MANAGER,
-    xhci_slot_manager::{self, SLOT_MANAGER},
-};
+static SCRATCHPAD: OnceCell<Scratchpad> = OnceCell::uninit();
 
-pub(crate) static SCRATCH_PAD: OnceCell<Spinlock<ScratchPad>> = OnceCell::uninit();
-
-struct ScratchPad {
-    buffer: PageBox<[[usize; mem::PAGE_SIZE_4K]]>,
-    buffer_indexs: PageBox<[VirtAddr]>,
+pub(crate) fn init() {
+    if Scratchpad::needed() {
+        init_static();
+    }
 }
 
-pub fn new() {
-    registers::handle(|r| {
-        let max_scratchpad_buffers = r
-            .capability
-            .hcsparams2
-            .read_volatile()
-            .max_scratchpad_buffers();
-        let mut scratch_pad = ScratchPad {
-            buffer: PageBox::alloc_pages(
-                max_scratchpad_buffers.try_into().unwrap(),
-                [0 as usize; mem::PAGE_SIZE_4K],
-            ),
-            buffer_indexs: PageBox::new_slice(
-                VirtAddr::from(0),
-                max_scratchpad_buffers.try_into().unwrap(),
-            ),
-        };
+fn init_static() {
+    let mut scratchpad = Scratchpad::new();
+    scratchpad.init();
+    scratchpad.register_with_dcbaa();
 
-        unsafe {
-            scratch_pad
-                .buffer
-                .iter()
-                .zip(scratch_pad.buffer_indexs.iter_mut())
-                .for_each(|(l, r)| {
-                    debug!("check this add is not zero? {:x}", l.as_ptr().addr());
-                    // (*r) = VirtAddr::from(*l as usize);
-                    (*r) = VirtAddr::from(l.as_ptr().addr());
-                })
+    SCRATCHPAD.init_once(|| scratchpad)
+}
+
+struct Scratchpad {
+    arr: PageBox<[VirtAddr]>,
+    bufs: Vec<PageBox<[u8]>>,
+}
+impl Scratchpad {
+    fn new() -> Self {
+        let len: usize = Self::num_of_buffers().try_into().unwrap();
+
+        Self {
+            arr: PageBox::new_slice(VirtAddr::from(0), len),
+            bufs: Vec::new(),
         }
+    }
 
-        SCRATCH_PAD.init_once(move || Spinlock::new(scratch_pad));
-    });
+    fn needed() -> bool {
+        Self::num_of_buffers() > 0
+    }
 
-    debug!("initialized!");
-}
+    fn init(&mut self) {
+        self.allocate_buffers();
+        self.write_buffer_addresses();
+    }
 
-pub fn assign_scratchpad_into_dcbaa() {
-    xhci_slot_manager::set_dcbaa(&SCRATCH_PAD.get().unwrap().lock().buffer_indexs);
-    //TODO Redundent design, simplify it.
-    debug!("initialized!");
+    fn register_with_dcbaa(&self) {
+        dcbaa::register_scratchpad_addr(self.arr.virt_addr());
+    }
+
+    fn allocate_buffers(&mut self) {
+        let layout =
+            Layout::from_size_align(Self::page_size().as_usize(), Self::page_size().as_usize());
+        let layout = layout.unwrap_or_else(|_| {
+            panic!(
+                "Failed to create a layout for {} bytes with {} bytes alignment",
+                Self::page_size().as_usize(),
+                Self::page_size().as_usize()
+            )
+        });
+
+        for _ in 0..Self::num_of_buffers() {
+            let b = PageBox::from_layout_zeroed(layout);
+
+            self.bufs.push(b);
+        }
+    }
+
+    fn write_buffer_addresses(&mut self) {
+        let page_size: usize = Self::page_size().as_usize();
+        for (x, buf) in self.arr.iter_mut().zip(self.bufs.iter()) {
+            *x = buf.virt_addr().align_up(page_size);
+        }
+    }
+
+    fn num_of_buffers() -> u32 {
+        registers::handle(|r| {
+            r.capability
+                .hcsparams2
+                .read_volatile()
+                .max_scratchpad_buffers()
+        })
+    }
+
+    fn page_size() -> Bytes {
+        Bytes::new(registers::handle(|r| r.operational.pagesize.read_volatile().get()).into())
+    }
 }
